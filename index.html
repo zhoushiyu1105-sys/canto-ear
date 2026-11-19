@@ -1,0 +1,921 @@
+<!doctype html>
+<html lang="zh-HK">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>港話聽力課</title>
+<meta name="theme-color" content="#0b6b4d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="港話聽力">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<style>
+/* What the claude.ai skeleton used to provide */
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;-webkit-text-size-adjust:100%}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<style>
+/* Layout: one column "route" — a minibus-plate header, tab strip, then cards; the 8-week plan drawn as an MTR-style line */
+:root{
+  --paper:#f2f5f2; --card:#ffffff; --ink:#14211c; --muted:#5a6a63; --line:#d3dcd6;
+  --green:#0b6b4d; --green-soft:#e1efe8; --red:#c4302a; --red-soft:#fbe7e5; --amber:#a76a00; --amber-soft:#fbf0d9;
+  --on-green:#ffffff;
+  --f-display:"Songti TC","Noto Serif HK","PMingLiU",serif;
+  --f-body:"PingFang HK","Noto Sans HK","Microsoft JhengHei",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#0e1512; --card:#151f1b; --ink:#e4ebe7; --muted:#93a39b; --line:#26342e;
+  --green:#3dbb8b; --green-soft:#16302a; --red:#ff6f62; --red-soft:#3a1d1b; --amber:#f0b44c; --amber-soft:#3a2d12;
+  --on-green:#06130e; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#0e1512; --card:#151f1b; --ink:#e4ebe7; --muted:#93a39b; --line:#26342e;
+  --green:#3dbb8b; --green-soft:#16302a; --red:#ff6f62; --red-soft:#3a1d1b; --amber:#f0b44c; --amber-soft:#3a2d12;
+  --on-green:#06130e; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.65}
+.wrap{max-width:860px;margin:0 auto;padding-block:20px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:20px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.3}
+h2{font-size:1.35rem} h3{font-size:1.08rem}
+p{margin:0}
+button,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+
+/* Minibus plate header */
+.plate{background:var(--green);color:var(--on-green);border-radius:10px;padding:16px 20px;display:flex;flex-wrap:wrap;gap:8px 20px;align-items:flex-end;justify-content:space-between}
+.plate h1{font-size:clamp(1.6rem,5vw,2.3rem);font-weight:900;letter-spacing:.04em}
+.plate .sub{font-size:.85rem;opacity:.9}
+.plate .stats{display:flex;gap:18px;font-variant-numeric:tabular-nums}
+.plate .stats b{display:block;font-family:var(--f-display);font-size:1.4rem;line-height:1.1}
+.plate .stats span{font-size:.75rem;letter-spacing:.06em;opacity:.85}
+
+nav.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto}
+nav.tabs a{padding:10px 14px;text-decoration:none;color:var(--muted);border-bottom:3px solid transparent;white-space:nowrap;font-weight:500}
+nav.tabs a[aria-current="page"]{color:var(--ink);border-bottom-color:var(--red)}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px;display:grid;gap:14px;min-width:0}
+.eyebrow{font-size:.75rem;letter-spacing:.08em;color:var(--muted);font-weight:500}
+.muted{color:var(--muted)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.pill{display:inline-block;padding:2px 10px;border-radius:999px;font-size:.78rem;font-weight:500;background:var(--green-soft);color:var(--green)}
+.pill.red{background:var(--red-soft);color:var(--red)}
+.pill.amber{background:var(--amber-soft);color:var(--amber)}
+.btn{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:8px 14px;cursor:pointer;font-weight:500;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{border-color:var(--green)}
+.btn.primary{background:var(--green);border-color:var(--green);color:var(--on-green)}
+.btn.small{padding:4px 10px;font-size:.85rem}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.notice{border-radius:8px;padding:12px 14px;background:var(--amber-soft);color:var(--ink);font-size:.9rem}
+.notice b{color:var(--amber)}
+ul.clean{margin:0;padding-left:1.2em;display:grid;gap:4px}
+
+/* Daily routine timeline */
+.routine{display:grid;gap:0}
+.routine .step{display:grid;grid-template-columns:64px 1fr;gap:12px;padding:10px 0;border-top:1px dashed var(--line)}
+.routine .step:first-child{border-top:0}
+.routine .min{font-family:var(--f-mono);font-variant-numeric:tabular-nums;color:var(--red);font-weight:500}
+
+/* MTR-style 8-week line */
+.mtr{display:grid;gap:0;position:relative}
+.station{display:grid;grid-template-columns:28px 1fr;gap:14px;position:relative;padding-bottom:16px}
+.station:before{content:"";position:absolute;left:12px;top:14px;bottom:-2px;width:4px;background:var(--green)}
+.station:last-child:before{display:none}
+.station .dot{width:28px;height:28px;border-radius:50%;background:var(--card);border:4px solid var(--green);z-index:1;display:grid;place-items:center;font-size:.72rem;font-weight:700;font-family:var(--f-mono)}
+.station.now .dot{background:var(--green);color:var(--on-green)}
+.station.done .dot{background:var(--green-soft)}
+.station .body{min-width:0;display:grid;gap:4px}
+.station .lessons{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.lchip{border:1px solid var(--line);border-radius:6px;padding:4px 10px;font-size:.85rem;text-decoration:none;color:var(--ink);background:var(--card)}
+.lchip.done{background:var(--green-soft);border-color:transparent;color:var(--green)}
+.lchip:hover{border-color:var(--green)}
+
+/* Lesson */
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;position:sticky;top:env(safe-area-inset-top,0px);background:var(--paper);padding:8px 0;z-index:5}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:0;background:transparent;padding:6px 10px;cursor:pointer;font-size:.85rem;font-variant-numeric:tabular-nums}
+.seg button[aria-pressed="true"]{background:var(--green);color:var(--on-green)}
+.line{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;padding:10px 0;border-top:1px solid var(--line);align-items:start}
+.line:first-child{border-top:0}
+.line .spk{font-size:.75rem;color:var(--muted);grid-column:2}
+.line .yue{font-size:1.15rem;grid-column:2;transition:filter .2s}
+.line .zh{font-size:.85rem;color:var(--muted);grid-column:2}
+.line .play{grid-row:1 / span 3}
+.blind .yue{filter:blur(7px);user-select:none}
+/* Jyutping ruby */
+.yue ruby{ruby-position:over;margin:0 .06em;line-height:1}
+.yue rt{font-family:var(--f-mono);font-size:.56em;color:var(--red);letter-spacing:0;font-weight:500;padding-bottom:2px}
+.yue rt[data-tone="1"],.yue rt[data-tone="2"]{color:var(--red)}
+.yue rt[data-tone="3"]{color:var(--amber)}
+.yue rt[data-tone="4"],.yue rt[data-tone="5"],.yue rt[data-tone="6"]{color:var(--green)}
+.yue ruby.en{margin:0 .3em}
+.yue.has-jp{line-height:2.3}
+.hidejp .yue rt{visibility:hidden}
+.hidejp .yue.has-jp{line-height:1.65}
+.hidejp .jpline{display:none}
+.jpline{display:block;font-family:var(--f-mono);font-size:.8rem;color:var(--red)}
+.tones{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+@media (max-width:520px){.tones{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.tone{border:1px solid var(--line);border-radius:8px;padding:8px 6px;background:var(--card);cursor:pointer;display:grid;gap:2px;justify-items:center;text-align:center}
+.tone:hover{border-color:var(--green)}
+.tone .c{font-size:1.5rem;font-weight:700;line-height:1.2}
+.tone .j{font-family:var(--f-mono);font-size:.85rem}
+.tone .d{font-size:.75rem;color:var(--muted)}
+.tone svg{width:44px;height:22px}
+.tone svg path{fill:none;stroke:currentColor;stroke-width:2.5;stroke-linecap:round}
+.tone.t-hi{color:var(--red)} .tone.t-mid{color:var(--amber)} .tone.t-lo{color:var(--green)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.8rem;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:middle}
+.hidezh .zh{display:none}
+.line.speaking .yue{color:var(--green)}
+.playbtn{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--card);cursor:pointer;display:grid;place-items:center;padding:0}
+.playbtn:hover{border-color:var(--green);color:var(--green)}
+.playbtn svg{width:14px;height:14px;fill:currentColor}
+.vocab{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+.vcard{border:1px solid var(--line);border-radius:8px;padding:10px 12px;display:grid;gap:2px;cursor:pointer;background:var(--card);text-align:left}
+.vcard:hover{border-color:var(--green)}
+.vcard .w{font-size:1.15rem;font-weight:700}
+.vcard .j{font-family:var(--f-mono);font-size:.82rem;color:var(--red)}
+.vcard .m{font-size:.85rem;color:var(--muted)}
+.q{display:grid;gap:8px;padding:12px 0;border-top:1px solid var(--line)}
+.q:first-child{border-top:0}
+.opts{display:grid;gap:6px}
+.opt{text-align:left;border:1px solid var(--line);border-radius:8px;padding:8px 12px;background:var(--card);cursor:pointer}
+.opt:hover{border-color:var(--green)}
+.opt.right{background:var(--green-soft);border-color:var(--green);color:var(--green)}
+.opt.wrong{background:var(--red-soft);border-color:var(--red);color:var(--red)}
+.checks{display:grid;gap:6px}
+.checks label{display:flex;gap:10px;align-items:flex-start;cursor:pointer}
+.checks input{margin-top:5px;accent-color:var(--green);width:16px;height:16px;flex:none}
+.task{border-left:4px solid var(--red);padding:8px 12px;background:var(--red-soft);border-radius:0 8px 8px 0}
+
+/* Test */
+.meter{height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--green)}
+.bigplay{width:88px;height:88px;border-radius:50%;background:var(--green);color:var(--on-green);border:0;cursor:pointer;display:grid;place-items:center;margin:0 auto}
+.bigplay svg{width:30px;height:30px;fill:currentColor}
+.result-level{font-family:var(--f-display);font-size:2rem;font-weight:900;color:var(--green)}
+table.simple{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+table.simple td,table.simple th{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left}
+.tablewrap{overflow-x:auto}
+.dict-ans{font-size:1.3rem;font-weight:700}
+.badge{display:inline-block;min-width:1.4em;margin-left:6px;padding:0 6px;border-radius:999px;background:var(--red);color:var(--on-green);font-size:.72rem;line-height:1.5;text-align:center;font-variant-numeric:tabular-nums}
+.grades{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+@media (max-width:520px){.grades{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.grade{border:1px solid var(--line);border-radius:8px;background:var(--card);padding:10px 6px;cursor:pointer;display:grid;gap:2px;justify-items:center;text-align:center}
+.grade span{font-size:.75rem;color:var(--muted)}
+.grade em{font-style:normal;font-family:var(--f-mono);font-size:.8rem}
+.grade.g1{border-color:var(--red)} .grade.g1 b,.grade.g1 em{color:var(--red)}
+.grade.g2 b,.grade.g2 em{color:var(--amber)}
+.grade.g3{border-color:var(--green)} .grade.g3 b,.grade.g3 em{color:var(--green)}
+.grade.g4 b,.grade.g4 em{color:var(--green)}
+.grade:hover{background:var(--green-soft)}
+.fc{display:grid;grid-template-columns:repeat(14,minmax(0,1fr));gap:4px;align-items:end;height:110px}
+.fcol{display:grid;justify-items:center;align-content:end;gap:3px;height:100%}
+.fcol i{display:block;width:70%;background:var(--green);border-radius:3px 3px 0 0;min-height:1px}
+.fcol .fn{font-size:.7rem;font-variant-numeric:tabular-nums;color:var(--ink)}
+.fcol .fd{font-size:.62rem;color:var(--muted);white-space:nowrap}
+svg.curve{width:100%;min-width:420px;height:auto;display:block}
+svg.curve path{fill:none;stroke-width:2.5}
+svg.curve .gl{stroke:var(--line);stroke-width:1}
+svg.curve .g90{stroke:var(--muted);stroke-dasharray:4 4}
+svg.curve text{fill:var(--muted);font-size:11px;font-family:var(--f-mono)}
+svg.curve .lab90{fill:var(--ink)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header class="plate">
+    <div>
+      <div class="sub">粵語聽力 · 八星期路線</div>
+      <h1>港話聽力課</h1>
+    </div>
+    <div class="stats">
+      <div><b id="st-done">0</b><span>已完成課</span></div>
+      <div><b id="st-streak">0</b><span>連續日數</span></div>
+      <div><b id="st-level">—</b><span>測驗程度</span></div>
+    </div>
+  </header>
+
+  <nav class="tabs" aria-label="主選單">
+    <a href="#today">今日</a>
+    <a href="#route">八星期路線</a>
+    <a href="#test">聽力測驗</a>
+    <a href="#review">複習<span id="due-badge" class="badge" hidden></span></a>
+  </nav>
+
+  <div id="voice-warn" class="notice" hidden></div>
+
+  <main id="view"></main>
+</div>
+
+<script>
+/* ---------------- Data ---------------- */
+const WEEKS = [
+  {n:1, name:"高頻助詞 + 生活起步", goal:"聽出 咗 / 緊 / 未 / 啦 / 喎 / 咋，聽懂數字同價錢", lessons:[1,2,3,4,5]},
+  {n:2, name:"出行、辦公室、生活服務", goal:"聽懂小巴港鐵、IT 求助、睇醫生、管理處、約飯局", lessons:[6,7,8,9,10]},
+  {n:3, name:"辦公室日常（深化）", goal:"借嘢、搵人、交件、請假、中英夾雜詞"},
+  {n:4, name:"會議與電話", goal:"跟得上會議大意：改期、跟進、deadline、approve"},
+  {n:5, name:"銀行、購物、退換", goal:"櫃位對話、八達通、轉數快、退貨、投訴"},
+  {n:6, name:"社交吹水", goal:"八卦、抱怨、讚人、飯局話題、常見俗語"},
+  {n:7, name:"語速提升", goal:"1.15 倍速盲聽、連讀吞音、電話音質"},
+  {n:8, name:"真實素材衝刺", goal:"新聞片段、港劇對白、會議錄音，綜合測驗"}
+];
+
+const LESSONS = {
+1:{title:"早晨，你食咗早餐未？",scene:"辦公室 · 朝早喺 lift 口撞到同事",focus:"咗（了）· 緊（正在）· 未（還沒）· 先（先…再）",
+ task:"今日留意同事講「…咗」「…緊」，記低最少兩句。",
+ lines:[
+ ["Amy","早晨！今日咁早嘅？","早上好！今天這麼早？"],
+ ["你","早晨！係呀，今日要開會，所以早咗出門。","早上好！對，今天要開會，所以早點出門了。"],
+ ["Amy","你食咗早餐未呀？","你吃早餐了嗎？"],
+ ["你","未呀，等陣先落去買。你呢？","還沒，等一下再下去買。你呢？"],
+ ["Amy","我食緊喇，喺樓下買咗個菠蘿油。","我正在吃，在樓下買了個菠蘿油。"],
+ ["你","哇，好香呀！咁我都去買個先。","哇，好香！那我也先去買一個。"],
+ ["Amy","快啲啦，九點半就開會喇。","快點吧，九點半就開會了。"]],
+ vocab:[["早晨","zou2 san4","早上好"],["咗","zo2","了（完成）"],["緊","gan2","正在"],["未","mei6","還沒／…了嗎"],["等陣","dang2 zan6","等一下"],["落去","lok6 heoi3","下去"],["菠蘿油","bo1 lo4 jau4","夾牛油的菠蘿包"],["快啲","faai3 di1","快點"]],
+ qs:[["點解今日咁早返工？",["要開會","要交報告","想買早餐","搭錯車"],0],["Amy 而家做緊乜？",["買緊早餐","食緊菠蘿油","開緊會","等緊 lift"],1],["幾點開會？",["九點","九點半","十點","十點半"],1]]},
+2:{title:"茶餐廳落單",scene:"生活 · 中午一個人去茶餐廳",focus:"搭枱 · 凍飲加錢 · 少甜／走冰 · 埋單",
+ task:"今日去茶餐廳或者外賣，用粵語講「凍檸茶少甜」或者「走冰」。",
+ lines:[
+ ["伙記","幾位呀？","幾位？"],
+ ["你","一位。","一位。"],
+ ["伙記","搭枱得唔得呀？","拼桌可以嗎？"],
+ ["你","得，冇問題。","可以，沒問題。"],
+ ["伙記","食乜嘢？","吃什麼？"],
+ ["你","要個沙爹牛肉公仔麵，加個蛋。","要一個沙爹牛肉方便麵，加個蛋。"],
+ ["伙記","飲咩呀？","喝什麼？"],
+ ["你","凍奶茶，少甜。","凍奶茶，少糖。"],
+ ["伙記","凍飲加兩蚊喎。","凍飲要加兩塊錢哦。"],
+ ["你","好呀，冇所謂。……唔該，埋單！","好，無所謂。……麻煩，結賬！"],
+ ["伙記","出去收銀度俾呀。","到外面收銀台付錢。"]],
+ vocab:[["搭枱","daap3 toi2","拼桌"],["食乜嘢","sik6 mat1 je5","吃什麼"],["公仔麵","gung1 zai2 min6","方便麵"],["少甜","siu2 tim4","少糖"],["走冰","zau2 bing1","去冰"],["凍飲","dung3 jam2","冷飲"],["埋單","maai4 daan1","結賬"],["冇所謂","mou5 so2 wai6","無所謂"]],
+ qs:[["伙記問你肯唔肯做咩？",["外賣","搭枱","等位","坐卡位"],1],["凍飲要加幾多錢？",["一蚊","兩蚊","三蚊","唔使加"],1],["喺邊度俾錢？",["俾伙記","喺枱度","出去收銀度","用 app"],2]]},
+3:{title:"街市買嘢：幾錢一斤？",scene:"生活 · 放工去街市",focus:"數字 · 蚊 · 斤 · 廿（二十）· 找錢",
+ task:"今日聽一次收銀員講價錢（超市、便利店都得），喺心入面重複一次個數。",
+ lines:[
+ ["你","老闆，啲橙點賣呀？","老闆，橙子怎麼賣？"],
+ ["老闆","十蚊四個，好甜㗎！","十塊錢四個，很甜的！"],
+ ["你","咁我要八個啦。仲有，呢啲菜幾錢一斤？","那我要八個吧。還有，這些菜多少錢一斤？"],
+ ["老闆","菜心十八蚊一斤。","菜心十八塊一斤。"],
+ ["你","要半斤啦。","要半斤吧。"],
+ ["老闆","好，一共廿九蚊。","好，一共二十九塊。"],
+ ["你","俾你五十蚊。","給你五十塊。"],
+ ["老闆","找你廿一蚊，多謝！","找你二十一塊，謝謝！"]],
+ vocab:[["點賣","dim2 maai6","怎麼賣"],["蚊","man1","塊（錢）"],["幾錢","gei2 cin2","多少錢"],["斤","gan1","斤"],["仲有","zung6 jau5","還有"],["一共","jat1 gung6","一共"],["廿","jaa6","二十（口語）"],["找","zaau2","找零"]],
+ qs:[["啲橙點賣？",["十蚊三個","十蚊四個","四蚊一個","十蚊八個"],1],["買咗幾多菜心？",["一斤","兩斤","半斤","一扎"],2],["老闆找返幾多錢？",["十一蚊","二十蚊","廿一蚊","廿九蚊"],2]]},
+4:{title:"老細話個 meeting 要改期",scene:"辦公室 · Teams／電話傾改期",focus:"得唔得閒 · 下晝／朝早 · 覆 · 中英夾雜",
+ task:"今日開會或者聽同事傾電話時，留意佢哋點講時間（朝早、下晝、聽朝）。",
+ lines:[
+ ["同事","Hello Kelly，有冇時間傾兩句？","Hello Kelly，有沒有時間聊兩句？"],
+ ["Kelly","有呀，乜事呀？","有啊，什麼事？"],
+ ["同事","聽日下晝三點個 meeting，老細話要改期。","明天下午三點的會議，老闆說要改期。"],
+ ["Kelly","改去幾時呀？","改到什麼時候？"],
+ ["同事","佢想改去禮拜五朝早十點，你得唔得閒？","他想改到星期五早上十點，你有空嗎？"],
+ ["Kelly","禮拜五朝早我約咗客，十一點之後先得。","星期五早上我約了客戶，十一點之後才可以。"],
+ ["同事","咁我問下佢十一點半得唔得，遲啲再覆你。","那我問問他十一點半行不行，晚點再回覆你。"],
+ ["Kelly","好呀，唔該晒。有咩 update 再 WhatsApp 我啦。","好，謝謝。有什麼更新再 WhatsApp 我吧。"]],
+ vocab:[["傾兩句","king1 loeng5 geoi3","聊兩句"],["下晝","haa6 zau3","下午"],["老細","lou5 sai3","老闆"],["改期","goi2 kei4","改日期"],["朝早","ziu1 zou2","早上"],["得閒","dak1 haan4","有空"],["覆","fuk1","回覆"],["唔該晒","m4 goi1 saai3","非常感謝"]],
+ qs:[["個 meeting 原本幾時？",["今日下晝三點","聽日下晝三點","禮拜五朝早十點","聽朝十一點"],1],["Kelly 點解禮拜五朝早唔得？",["請咗假","約咗客","要開第二個會","要出差"],1],["同事之後會做咩？",["直接取消","問老細十一點半得唔得","約 Kelly 食飯","發 email 俾客"],1]]},
+5:{title:"食咩好？順便八卦下",scene:"社交 · 同同事諗午飯",focus:"求其 · 話事 · 聽講 · 吓？· 咋",
+ task:"今日午飯時間，留意身邊人講「求其啦」「真唔真㗎」「聽講…」。",
+ lines:[
+ ["阿詩","喂，今日食咩好呀？","喂，今天吃什麼好？"],
+ ["你","求其啦，你話事。","隨便吧，你決定。"],
+ ["阿詩","不如去試下對面新開嗰間拉麵？","不如去試試對面新開的那家拉麵？"],
+ ["你","聽講要排好耐隊喎。","聽說要排很久隊呢。"],
+ ["阿詩","唔緊要，而家先十二點，早啲去應該冇咁多人。","沒關係，現在才十二點，早點去應該沒那麼多人。"],
+ ["你","好啦好啦。係呢，你聽講未，阿 Ben 下個月辭職呀。","好吧好吧。對了，你聽說了嗎，阿 Ben 下個月辭職。"],
+ ["阿詩","吓？真唔真㗎？佢先做咗半年咋。","啊？真的假的？他才做了半年而已。"],
+ ["你","係呀，聽講搵到份人工高好多嘅工。","是啊，聽說找到一份工資高很多的工作。"],
+ ["阿詩","咁又係嘅，換咗我都走啦。","那也是，換了我也走。"]],
+ vocab:[["求其","kau4 kei4","隨便"],["話事","waa6 si6","做主、決定"],["嗰間","go2 gaan1","那家"],["聽講","teng1 gong2","聽說"],["排隊","paai4 deoi2","排隊"],["吓？","haa2","啊？（驚訝）"],["咋","zaa3","而已"],["人工","jan4 gung1","工資"]],
+ qs:[["佢哋去食咩？",["茶餐廳","對面新開嘅拉麵","日本壽司","叫外賣"],1],["點解要早啲去？",["人少啲","有折","老細請食","要返去開會"],0],["阿 Ben 點解辭職？",["想讀書","搬屋","搵到人工高好多嘅工","同老細唔夾"],2]]},
+6:{title:"前面有落，唔該！",scene:"出行 · 小巴落車＋問路去機場",focus:"有落 · 過埋個燈 · 轉車 · 塞車",
+ task:"今日搭車時聽清楚港鐵廣播嘅廣東話版本，跟住喺心入面講一次站名。",
+ lines:[
+ ["乘客","前面有落，唔該！","前面下車，謝謝！"],
+ ["司機","前面唔停得呀，過埋個燈先。","前面不能停，過了紅綠燈再說。"],
+ ["乘客","OK，唔該晒。","好，謝謝。"],
+ ["路人甲","唔好意思，想問下去機場點去最方便？","不好意思，想問一下去機場怎麼走最方便？"],
+ ["路人乙","你可以喺香港站或者九龍站搭機場快綫，大概二十幾分鐘就到。","你可以在香港站或九龍站坐機場快線，大概二十多分鐘就到。"],
+ ["路人甲","咁搭的士呢？","那坐計程車呢？"],
+ ["路人乙","的士都得，不過貴好多，又要睇塞唔塞車。","計程車也可以，不過貴很多，還要看堵不堵車。"]],
+ vocab:[["有落","jau5 lok6","（小巴）要下車"],["唔停得","m4 ting4 dak1","不能停"],["過埋個燈","gwo3 maai4 go3 dang1","過了紅綠燈"],["點去","dim2 heoi3","怎麼去"],["機場快綫","gei1 coeng4 faai3 sin3","機場快線"],["的士","dik1 si2","計程車"],["塞車","sak1 ce1","堵車"],["貴好多","gwai3 hou2 do1","貴很多"]],
+ qs:[["小巴司機喺邊度停？",["即刻停","過咗紅綠燈","下一個站","總站"],1],["去機場最方便係？",["搭巴士","香港站／九龍站搭機場快綫","搭小巴","搭船"],1],["搭的士有咩問題？",["冇車","貴同埋可能塞車","司機唔識路","唔收八達通"],1]]},
+7:{title:"部影印機又壞咗",scene:"辦公室 · 搵同事幫手",focus:"壞咗 · 卡紙 · 整 · 住先 · 拍卡",
+ task:"今日喺公司用粵語問一件小事，例如「呢部機點用呀？」。",
+ lines:[
+ ["你","阿 May，部影印機又壞咗呀，成日卡紙。","阿 May，影印機又壞了，老是卡紙。"],
+ ["May","又係佢？你打咗俾 IT 未呀？","又是它？你打給 IT 了嗎？"],
+ ["你","打咗，佢話要聽日先有人上嚟整。","打了，他說要明天才有人上來修。"],
+ ["May","咁你急唔急用？我哋樓下嗰部用得。","那你急著用嗎？我們樓下那台能用。"],
+ ["你","急呀，下晝要交份文件俾 compliance。","急啊，下午要交一份文件給合規部。"],
+ ["May","咁你落去樓下印住先啦，記得帶張職員證，要拍卡先入到。","那你先下樓去印吧，記得帶員工證，要刷卡才能進。"]],
+ vocab:[["壞咗","waai6 zo2","壞了"],["成日","seng4 jat6","總是、經常"],["卡紙","kaa1 zi2","卡紙"],["打俾","daa2 bei2","打電話給"],["整","zing2","修理"],["交","gaau1","交（文件）"],["住先","zyu6 sin1","暫且先"],["拍卡","paak3 kaat1","刷卡"]],
+ qs:[["影印機有咩問題？",["冇墨","成日卡紙","冇電","冇紙"],1],["IT 幾時上嚟整？",["而家","今日下晝","聽日","下個禮拜"],2],["落去樓下要帶咩？",["身份證","職員證","八達通","鎖匙"],1]]},
+8:{title:"睇醫生：喉嚨痛咗兩日",scene:"生活 · 私家診所",focus:"症狀 · 尋晚 · 開藥 · 病假紙",
+ task:"今日讀一次 Day 8 對話，用粵語講出你上次病嘅症狀（講俾自己聽都得）。",
+ lines:[
+ ["醫生","有咩唔舒服呀？","哪裡不舒服？"],
+ ["你","我喉嚨痛咗兩日，仲有啲咳。","我喉嚨痛了兩天，還有點咳嗽。"],
+ ["醫生","有冇發燒呀？","有沒有發燒？"],
+ ["你","尋晚有少少，大概三十七度半。","昨晚有一點，大概三十七度半。"],
+ ["醫生","我睇下……喉嚨有啲發炎。我開兩日藥俾你，食完飯先食。要唔要病假紙？","我看看……喉嚨有點發炎。我開兩天藥給你，吃完飯再吃。要不要病假條？"],
+ ["你","要呀，唔該。","要，謝謝。"],
+ ["醫生","好，出去等攞藥啦。多啲飲水，早啲瞓。","好，出去等拿藥吧。多喝水，早點睡。"]],
+ vocab:[["唔舒服","m4 syu1 fuk6","不舒服"],["喉嚨","hau4 lung4","喉嚨"],["咳","kat1","咳嗽"],["發燒","faat3 siu1","發燒"],["尋晚","cam4 maan5","昨晚"],["開藥","hoi1 joek6","開藥"],["病假紙","beng6 gaa3 zi2","病假條"],["攞藥","lo2 joek6","拿藥"],["瞓","fan3","睡"]],
+ qs:[["病人有咩症狀？",["頭痛同肚痛","喉嚨痛同咳","發燒同嘔","腰痛"],1],["幾時發燒？",["今朝","尋晚","前日","冇發燒"],1],["啲藥點食？",["空肚食","食完飯先食","瞓覺前食","痛先食"],1]]},
+9:{title:"管理處：廁所漏水",scene:"生活 · 住所報修",focus:"漏水 · 樓上 · 喺度 · 搵到人再打俾你",
+ task:"今日留意大廈管理員或者保安講嘢，聽佢哋點樣叫住戶（「X樓Y室」）。",
+ lines:[
+ ["你","唔該，我係十二樓 B 室嘅，個廁所漏水，可唔可以搵人上嚟睇下？","麻煩一下，我是 12 樓 B 室的，廁所漏水，可不可以找人上來看看？"],
+ ["管理員","漏水呀？係咪樓上滴落嚟㗎？","漏水？是不是樓上滴下來的？"],
+ ["你","應該係，天花板一直滴水。","應該是，天花板一直滴水。"],
+ ["管理員","咁我同你聯絡下十三樓 B 嘅住戶先。你今晚幾點喺屋企？","那我先幫你聯繫 13 樓 B 的住戶。你今晚幾點在家？"],
+ ["你","七點之後都喺度。","七點之後都在。"],
+ ["管理員","好，我搵到人再打俾你。","好，我找到人再打給你。"]],
+ vocab:[["管理處","gun2 lei5 cyu3","物業管理處"],["漏水","lau6 seoi2","漏水"],["廁所","ci3 so2","洗手間"],["係咪","hai6 mai6","是不是"],["滴落嚟","dik6 lok6 lei4","滴下來"],["天花板","tin1 faa1 baan2","天花板"],["屋企","uk1 kei2","家"],["喺度","hai2 dou6","在（這裡）"]],
+ qs:[["邊度漏水？",["廚房","廁所天花板","露台","窗口"],1],["管理員會先搵邊個？",["水喉師傅","十三樓 B 嘅住戶","業主","消防"],1],["你今晚幾點喺屋企？",["六點後","七點後","八點後","成晚唔喺度"],1]]},
+10:{title:"禮拜六幫阿 Jo 慶生",scene:"社交 · WhatsApp 語音約飯局",focus:"夾錢 · book 位 · 轉數快 · 次次",
+ task:"今日用粵語約一個人食飯或者飲嘢（講一句都得）：「聽日得唔得閒食飯？」",
+ lines:[
+ ["阿希","喂，禮拜六晚得唔得閒？阿 Jo 生日，搵咗間火鍋。","喂，星期六晚上有空嗎？阿 Jo 生日，找了一家火鍋。"],
+ ["你","得呀！喺邊度呀？","有空！在哪裡？"],
+ ["阿希","銅鑼灣，七點半，我 book 咗位。","銅鑼灣，七點半，我訂了位。"],
+ ["你","好呀，使唔使夾錢買禮物？","好啊，要不要湊錢買禮物？"],
+ ["阿希","我哋幾個夾咗份，每人三百，你 OK 嘛？","我們幾個湊了一份，每人三百，你 OK 吧？"],
+ ["你","OK，等陣轉數快俾你。","OK，等一下用轉數快轉給你。"],
+ ["阿希","好，記得唔好遲到呀，你次次都遲。","好，記得別遲到，你每次都遲。"],
+ ["你","唔會啦，今次一定準時！","不會啦，這次一定準時！"]],
+ vocab:[["火鍋","fo2 wo1","火鍋"],["銅鑼灣","tung4 lo4 waan1","銅鑼灣"],["使唔使","sai2 m4 sai2","需不需要"],["夾錢","gaap3 cin2","湊錢"],["禮物","lai5 mat6","禮物"],["轉數快","zyun2 sou3 faai3","FPS 即時轉賬"],["次次","ci3 ci3","每次"],["準時","zeon2 si4","準時"]],
+ qs:[["喺邊度食飯？",["尖沙咀火鍋","銅鑼灣火鍋","旺角燒肉","中環西餐"],1],["每人夾幾多錢？",["一百","二百","三百","五百"],2],["你會點俾錢？",["現金","轉數快","八達通","信用卡"],1]]}
+};
+
+const TEST = [
+ {lv:"A",rate:.9,yue:"唔該，埋單。",opts:["麻煩你，結賬。","麻煩你，打包。","謝謝，不用了。","請問洗手間在哪？"],a:0},
+ {lv:"A",rate:.9,yue:"而家幾點呀？",opts:["你在哪裡？","現在幾點？","今天星期幾？","多少錢？"],a:1},
+ {lv:"A",rate:.9,yue:"我哋聽日見。",opts:["我們今天見。","我們明天見。","我們昨天見過。","我們下次見。"],a:1},
+ {lv:"A",rate:.9,yue:"呢個幾多錢呀？",opts:["這個是什麼？","這個好不好？","這個多少錢？","這個有幾個？"],a:2},
+ {lv:"B",rate:1,yue:"唔好意思，我遲咗少少，塞車呀。",opts:["不好意思，我早到了一點。","不好意思，我遲到了一點，堵車。","不好意思，我走錯路了。","不好意思，車壞了。"],a:1},
+ {lv:"B",rate:1,yue:"你食咗飯未呀？不如一齊落去食啦。",opts:["你在吃飯嗎？我先下去了。","你吃飯了嗎？不如一起下去吃吧。","你想吃什麼？我請你。","你吃完了嗎？一起上去吧。"],a:1},
+ {lv:"B",rate:1,yue:"凍檸茶，少甜，走冰。",opts:["熱檸檬茶，多糖。","凍檸檬茶，少糖，不要冰。","凍檸檬茶，正常甜，多冰。","凍奶茶，少糖，去冰。"],a:1},
+ {lv:"B",rate:1,yue:"出面落緊雨，記得帶遮呀。",opts:["外面很熱，記得帶水。","外面在下雨，記得帶傘。","外面颳風，記得關窗。","外面停雨了，可以走了。"],a:1},
+ {lv:"C",rate:1.05,yue:"份 report 你今日收工之前 send 俾我得唔得？",opts:["報告你明天早上給我可以嗎？","報告你今天下班前發給我可以嗎？","報告你已經發給我了嗎？","報告你下班後再改可以嗎？"],a:1},
+ {lv:"C",rate:1.05,yue:"個 meeting 改咗去聽朝十點，你得唔得閒？",opts:["會議取消了，你知道嗎？","會議改到明天早上十點，你有空嗎？","會議改到今天下午十點，你來嗎？","會議十點開始，你遲到了。"],a:1},
+ {lv:"C",rate:1.05,yue:"佢今日請咗病假，你搵佢同事跟進住先啦。",opts:["他今天請病假，你先找他同事跟進吧。","他今天放年假，你明天再找他吧。","他今天加班，你等他一下吧。","他今天辭職了，你找老闆吧。"],a:0},
+ {lv:"C",rate:1.05,yue:"呢單 case 有啲蹺蹊，我哋要再 check 下啲文件。",opts:["這個案子很簡單，可以結案了。","這個案子有點可疑，我們要再檢查一下文件。","這個案子很急，今天要交。","這個案子文件不見了。"],a:1},
+ {lv:"D",rate:1.15,yue:"今晚唔使等我食飯喇，要OT呀。",opts:["今晚一起吃飯，我請客。","今晚不用等我吃飯了，要加班。","今晚我會晚一點到，先吃吧。","今晚我不舒服，不吃飯了。"],a:1},
+ {lv:"D",rate:1.15,yue:"佢成日扮晒嘢，其實咩都唔識。",opts:["他總是很努力，什麼都會。","他總是裝很厲害，其實什麼都不懂。","他總是很安靜，其實很聰明。","他總是遲到，什麼都不做。"],a:1},
+ {lv:"D",rate:1.15,yue:"咁啱嘅，我都喺附近，等陣過嚟搵你。",opts:["真不巧，我不在附近。","這麼巧，我也在附近，等一下過來找你。","剛好，我已經到了，你在哪？","好吧，我回家了，改天再找你。"],a:1}
+];
+const LV_NAME = {A:"單詞短句",B:"日常句子",C:"辦公室句子",D:"快語速＋俗語"};
+
+/* Jyutping, one string per dialogue line (same order as LESSONS[id].lines). English words are kept as-is. */
+const JP = {
+1:["zou2 san4 gam1 jat6 gam3 zou2 ge2",
+ "zou2 san4 hai6 aa3 gam1 jat6 jiu3 hoi1 wui2 so2 ji5 zou2 zo2 ceot1 mun4",
+ "nei5 sik6 zo2 zou2 caan1 mei6 aa3",
+ "mei6 aa3 dang2 zan6 sin1 lok6 heoi3 maai5 nei5 ne1",
+ "ngo5 sik6 gan2 laa3 hai2 lau4 haa6 maai5 zo2 go3 bo1 lo4 jau4",
+ "waa3 hou2 hoeng1 aa3 gam2 ngo5 dou1 heoi3 maai5 go3 sin1",
+ "faai3 di1 laa1 gau2 dim2 bun3 zau6 hoi1 wui2 laa3"],
+2:["gei2 wai2 aa3","jat1 wai2","daap3 toi2 dak1 m4 dak1 aa3","dak1 mou5 man6 tai4","sik6 mat1 je5",
+ "jiu3 go3 saa1 de1 ngau4 juk6 gung1 zai2 min6 gaa1 go3 daan2","jam2 me1 aa3","dung3 naai5 caa4 siu2 tim4",
+ "dung3 jam2 gaa1 loeng5 man1 wo3","hou2 aa3 mou5 so2 wai6 m4 goi1 maai4 daan1","ceot1 heoi3 sau1 ngan4 dou6 bei2 aa3"],
+3:["lou5 baan2 di1 caang2 dim2 maai6 aa3","sap6 man1 sei3 go3 hou2 tim4 gaa3",
+ "gam2 ngo5 jiu3 baat3 go3 laa1 zung6 jau5 ni1 di1 coi3 gei2 cin2 jat1 gan1",
+ "coi3 sam1 sap6 baat3 man1 jat1 gan1","jiu3 bun3 gan1 laa1","hou2 jat1 gung6 jaa6 gau2 man1",
+ "bei2 nei5 ng5 sap6 man1","zaau2 nei5 jaa6 jat1 man1 do1 ze6"],
+4:["Hello Kelly jau5 mou5 si4 gaan3 king1 loeng5 geoi3","jau5 aa3 mat1 si6 aa3",
+ "ting1 jat6 haa6 zau3 saam1 dim2 go3 meeting lou5 sai3 waa6 jiu3 goi2 kei4","goi2 heoi3 gei2 si4 aa3",
+ "keoi5 soeng2 goi2 heoi3 lai5 baai3 ng5 ziu1 zou2 sap6 dim2 nei5 dak1 m4 dak1 haan4",
+ "lai5 baai3 ng5 ziu1 zou2 ngo5 joek3 zo2 haak3 sap6 jat1 dim2 zi1 hau6 sin1 dak1",
+ "gam2 ngo5 man6 haa5 keoi5 sap6 jat1 dim2 bun3 dak1 m4 dak1 ci4 di1 zoi3 fuk1 nei5",
+ "hou2 aa3 m4 goi1 saai3 jau5 me1 update zoi3 WhatsApp ngo5 laa1"],
+5:["wai3 gam1 jat6 sik6 me1 hou2 aa3","kau4 kei4 laa1 nei5 waa6 si6",
+ "bat1 jyu4 heoi3 si3 haa5 deoi3 min6 san1 hoi1 go2 gaan1 laai1 min6","teng1 gong2 jiu3 paai4 hou2 noi6 deoi2 wo3",
+ "m4 gan2 jiu3 ji4 gaa1 sin1 sap6 ji6 dim2 zou2 di1 heoi3 jing1 goi1 mou5 gam3 do1 jan4",
+ "hou2 laa1 hou2 laa1 hai6 ne1 nei5 teng1 gong2 mei6 aa3 Ben haa6 go3 jyut6 ci4 zik1 aa3",
+ "haa2 zan1 m4 zan1 gaa3 keoi5 sin1 zou6 zo2 bun3 nin4 zaa3",
+ "hai6 aa3 teng1 gong2 wan2 dou2 fan6 jan4 gung1 gou1 hou2 do1 ge3 gung1",
+ "gam2 jau6 hai6 ge3 wun6 zo2 ngo5 dou1 zau2 laa1"],
+6:["cin4 min6 jau5 lok6 m4 goi1","cin4 min6 m4 ting4 dak1 aa3 gwo3 maai4 go3 dang1 sin1","OK m4 goi1 saai3",
+ "m4 hou2 ji3 si1 soeng2 man6 haa5 heoi3 gei1 coeng4 dim2 heoi3 zeoi3 fong1 bin6",
+ "nei5 ho2 ji5 hai2 hoeng1 gong2 zaam6 waak6 ze2 gau2 lung4 zaam6 daap3 gei1 coeng4 faai3 sin3 daai6 koi3 ji6 sap6 gei2 fan1 zung1 zau6 dou3",
+ "gam2 daap3 dik1 si2 ne1","dik1 si2 dou1 dak1 bat1 gwo3 gwai3 hou2 do1 jau6 jiu3 tai2 sak1 m4 sak1 ce1"],
+7:["aa3 May bou6 jing2 jan3 gei1 jau6 waai6 zo2 aa3 seng4 jat6 kaa1 zi2",
+ "jau6 hai6 keoi5 nei5 daa2 zo2 bei2 IT mei6 aa3",
+ "daa2 zo2 keoi5 waa6 jiu3 ting1 jat6 sin1 jau5 jan4 soeng5 lei4 zing2",
+ "gam2 nei5 gap1 m4 gap1 jung6 ngo5 dei6 lau4 haa6 go2 bou6 jung6 dak1",
+ "gap1 aa3 haa6 zau3 jiu3 gaau1 fan6 man4 gin2 bei2 compliance",
+ "gam2 nei5 lok6 heoi3 lau4 haa6 jan3 zyu6 sin1 laa1 gei3 dak1 daai3 zoeng1 zik1 jyun4 zing3 jiu3 paak3 kaat1 sin1 jap6 dou2"],
+8:["jau5 me1 m4 syu1 fuk6 aa3","ngo5 hau4 lung4 tung3 zo2 loeng5 jat6 zung6 jau5 di1 kat1","jau5 mou5 faat3 siu1 aa3",
+ "cam4 maan5 jau5 siu2 siu2 daai6 koi3 saam1 sap6 cat1 dou6 bun3",
+ "ngo5 tai2 haa5 hau4 lung4 jau5 di1 faat3 jim4 ngo5 hoi1 loeng5 jat6 joek6 bei2 nei5 sik6 jyun4 faan6 sin1 sik6 jiu3 m4 jiu3 beng6 gaa3 zi2",
+ "jiu3 aa3 m4 goi1","hou2 ceot1 heoi3 dang2 lo2 joek6 laa1 do1 di1 jam2 seoi2 zou2 di1 fan3"],
+9:["m4 goi1 ngo5 hai6 sap6 ji6 lau2 B sat1 ge3 go3 ci3 so2 lau6 seoi2 ho2 m4 ho2 ji5 wan2 jan4 soeng5 lei4 tai2 haa5",
+ "lau6 seoi2 aa3 hai6 mai6 lau4 soeng6 dik6 lok6 lei4 gaa3","jing1 goi1 hai6 tin1 faa1 baan2 jat1 zik6 dik6 seoi2",
+ "gam2 ngo5 tung4 nei5 lyun4 lok3 haa5 sap6 saam1 lau2 B ge3 zyu6 wu6 sin1 nei5 gam1 maan5 gei2 dim2 hai2 uk1 kei2",
+ "cat1 dim2 zi1 hau6 dou1 hai2 dou6","hou2 ngo5 wan2 dou2 jan4 zoi3 daa2 bei2 nei5"],
+10:["wai3 lai5 baai3 luk6 maan5 dak1 m4 dak1 haan4 aa3 Jo saang1 jat6 wan2 zo2 gaan1 fo2 wo1",
+ "dak1 aa3 hai2 bin1 dou6 aa3","tung4 lo4 waan1 cat1 dim2 bun3 ngo5 book zo2 wai2",
+ "hou2 aa3 sai2 m4 sai2 gaap3 cin2 maai5 lai5 mat6","ngo5 dei6 gei2 go3 gaap3 zo2 fan6 mui5 jan4 saam1 baak3 nei5 OK maa3",
+ "OK dang2 zan6 zyun2 sou3 faai3 bei2 nei5","hou2 gei3 dak1 m4 hou2 ci4 dou3 aa3 nei5 ci3 ci3 dou1 ci4",
+ "m4 wui5 laa1 gam1 ci3 jat1 ding6 zeon2 si4"]
+};
+const TEST_JP = ["m4 goi1 maai4 daan1","ji4 gaa1 gei2 dim2 aa3","ngo5 dei6 ting1 jat6 gin3","ni1 go3 gei2 do1 cin2 aa3",
+ "m4 hou2 ji3 si1 ngo5 ci4 zo2 siu2 siu2 sak1 ce1 aa3","nei5 sik6 zo2 faan6 mei6 aa3 bat1 jyu4 jat1 cai4 lok6 heoi3 sik6 laa1",
+ "dung3 ning2 caa4 siu2 tim4 zau2 bing1","ceot1 min6 lok6 gan2 jyu5 gei3 dak1 daai3 ze1 aa3",
+ "fan6 report nei5 gam1 jat6 sau1 gung1 zi1 cin4 send bei2 ngo5 dak1 m4 dak1",
+ "go3 meeting goi2 zo2 heoi3 ting1 ziu1 sap6 dim2 nei5 dak1 m4 dak1 haan4",
+ "keoi5 gam1 jat6 ceng2 zo2 beng6 gaa3 nei5 wan2 keoi5 tung4 si6 gan1 zeon3 zyu6 sin1 laa1",
+ "ni1 daan1 case jau5 di1 kiu2 kai1 ngo5 dei6 jiu3 zoi3 check haa5 di1 man4 gin2",
+ "gam1 maan5 m4 sai2 dang2 ngo5 sik6 faan6 laa3 jiu3 OT aa3",
+ "keoi5 seng4 jat6 baan6 saai3 je5 kei4 sat6 me1 dou1 m4 sik1",
+ "gam3 ngaam1 ge3 ngo5 dou1 hai2 fu6 gan6 dang2 zan6 gwo3 lei4 wan2 nei5"];
+
+const TONES = [["詩","si1","1","高平","55"],["史","si2","2","高升","35"],["試","si3","3","中平","33"],["時","si4","4","低降","21"],["市","si5","5","低升","23"],["事","si6","6","低平","22"]];
+
+/* Split text into syllable tokens (each Chinese character, each English word) and punctuation, then pair syllables with jyutping. */
+function tokenize(text){return text.match(/[A-Za-z][A-Za-z']*|[㐀-鿿豈-﫿]|\S/gu)||[]}
+const isSyl=t=>/^[A-Za-z]|^[㐀-鿿豈-﫿]$/u.test(t);
+function rubyHTML(text,jp){
+  const e=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+  if(!jp)return e(text);
+  const toks=tokenize(text),syl=jp.trim().split(/\s+/);
+  if(toks.filter(isSyl).length!==syl.length)return e(text)+`<span class="jpline">${e(jp)}</span>`;
+  let k=0,out="";
+  for(const t of toks){
+    if(!isSyl(t)){out+=`<span class="punc">${e(t)}</span>`;continue}
+    const j=syl[k++];
+    out+= /^[A-Za-z]/.test(t)&&j===t ? `<ruby class="en">${e(t)}<rt>&nbsp;</rt></ruby>` : `<ruby>${e(t)}<rt data-tone="${(j.match(/\d$/)||[""])[0]}">${e(j)}</rt></ruby>`;
+  }
+  return out;
+}
+
+/* ---------------- Storage ---------------- */
+const KEY="canto-ear-v1";
+function load(){try{return JSON.parse(localStorage.getItem(KEY))||{}}catch(e){return {}}}
+let S=Object.assign({done:{},checks:{},test:null,cards:{},newDay:null,revDays:{}},load());
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+const today=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
+function streak(){
+  const days=new Set(Object.values(S.done));let n=0;const d=new Date();
+  if(!days.has(today()))d.setDate(d.getDate()-1);
+  while(true){const k=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");if(days.has(k)){n++;d.setDate(d.getDate()-1)}else break}
+  return n;
+}
+function nextLesson(){for(const w of WEEKS){if(!w.lessons)continue;for(const id of w.lessons){if(!S.done[id])return id}}return null}
+function refreshStats(){
+  document.getElementById("st-done").textContent=Object.keys(S.done).length;
+  document.getElementById("st-streak").textContent=streak();
+  document.getElementById("st-level").textContent=S.test?S.test.level:"—";
+  const bd=document.getElementById("due-badge");if(bd&&typeof dueCount==="function"){const n=dueCount();bd.textContent=n;bd.hidden=!n}
+}
+
+/* ---------------- Speech ---------------- */
+let voices=[],hkVoice=null,rate=Number((()=>{try{return localStorage.getItem(KEY+"-rate")}catch(e){return null}})())||0.9;
+function pickVoice(){
+  if(!("speechSynthesis" in window))return;
+  voices=speechSynthesis.getVoices();
+  const hk=voices.filter(v=>/^(zh[-_]HK|yue)/i.test(v.lang)||/cantonese|粵|廣東/i.test(v.name));
+  hkVoice=hk.find(v=>/premium|enhanced|優化/i.test(v.name))||hk[0]||null;
+  const w=document.getElementById("voice-warn");
+  if(!hkVoice&&voices.length){
+    w.innerHTML='<b>未搵到粵語（香港）發音。</b> 而家會用其他中文聲音讀出，發音唔準。Mac：系統設定 → 輔助使用 → 朗讀內容 → 系統聲音 → 管理聲音，下載「中文（香港）」嘅聲音（例如 Sinji），然後重新開呢頁。iPhone：設定 → 輔助使用 → 朗讀內容 → 聲音 → 中文（香港）。';
+    w.hidden=false;
+  }else w.hidden=true;
+}
+if("speechSynthesis" in window){pickVoice();speechSynthesis.onvoiceschanged=pickVoice;}
+function speak(text,opts={}){
+  return new Promise(res=>{
+    if(!("speechSynthesis" in window)){res();return}
+    const u=new SpeechSynthesisUtterance(text.replace(/\s+/g," "));
+    u.lang="zh-HK"; if(hkVoice)u.voice=hkVoice;
+    u.rate=opts.rate||rate; u.pitch=opts.pitch||1;
+    u.onend=res;u.onerror=res;
+    speechSynthesis.speak(u);
+  });
+}
+function stopSpeak(){if("speechSynthesis" in window)speechSynthesis.cancel()}
+const PLAY='<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9-5.5z"/></svg>';
+const STOP='<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3.5" y="3.5" width="9" height="9"/></svg>';
+function rateSeg(){
+  return '<div class="seg" role="group" aria-label="語速">'+[0.75,0.9,1,1.15].map(r=>`<button data-rate="${r}" aria-pressed="${r===rate}">${r}×</button>`).join("")+'</div>';
+}
+function bindRate(root){
+  root.querySelectorAll("[data-rate]").forEach(b=>b.onclick=()=>{rate=Number(b.dataset.rate);try{localStorage.setItem(KEY+"-rate",rate)}catch(e){}root.querySelectorAll("[data-rate]").forEach(x=>x.setAttribute("aria-pressed",Number(x.dataset.rate)===rate))});
+}
+let showJP=(()=>{try{return localStorage.getItem(KEY+"-jp")!=="0"}catch(e){return true}})();
+const CONTOUR={1:"M4 4 H40",2:"M4 14 L40 4",3:"M4 10 H40",4:"M4 15 L40 20",5:"M4 18 L40 13",6:"M4 15 H40"};
+function toneChart(){
+  return `<div class="tones">${TONES.map(t=>`<button class="tone ${t[2]<3?"t-hi":t[2]==3?"t-mid":"t-lo"}" data-tone-say="${t[0]}" aria-label="聽第 ${t[2]} 聲 ${t[0]}"><span class="c">${t[0]}</span><span class="j">${t[1]}</span><svg viewBox="0 0 44 22" aria-hidden="true"><path d="${CONTOUR[t[2]]}"/></svg><span class="d">${t[2]} 聲 · ${t[3]}</span></button>`).join("")}</div>
+  <p class="muted" style="font-size:.85rem">同一個音 si，六個聲調就係六個字：詩、史、試、時、市、事。粵拼最尾嗰個數字就係聲調。普通話冇嘅「低」聲（4、5、6）係最易讀錯嘅，跟讀時特別留意。帶 p / t / k 收尾嘅字（例如 食 sik6、得 dak1、百 baak3）讀得短促，聲調仍然用 1、3、6 標。</p>
+  <div class="row"><button class="btn small" id="tone-all">${PLAY}<span>連住聽六個</span></button></div>`;
+}
+function bindTones(root){
+  root.querySelectorAll("[data-tone-say]").forEach(b=>b.onclick=()=>{stopSpeak();speak(b.dataset.toneSay,{rate:.75})});
+  const all=root.querySelector("#tone-all");
+  if(all)all.onclick=async()=>{stopSpeak();for(const t of TONES){await speak(t[0],{rate:.75});await new Promise(r=>setTimeout(r,250))}};
+}
+function toneLegend(){return `<span class="legend"><span><i style="background:var(--red)"></i>高 1·2</span><span><i style="background:var(--amber)"></i>中 3</span><span><i style="background:var(--green)"></i>低 4·5·6</span></span>`}
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* ---------------- Views ---------------- */
+const view=document.getElementById("view");
+
+function vToday(){
+  const nl=nextLesson(); const L=nl?LESSONS[nl]:null;
+  const lvl=S.test?S.test.level:"L2（自評）";
+  view.innerHTML=`
+  <div style="display:grid;gap:20px">
+  <section class="card">
+    <div class="eyebrow">老師嘅初步評估</div>
+    <h2>你而家喺「聽得出關鍵詞」階段：約 L2 / 5</h2>
+    <p>根據你講嘅情況（普通話母語、喺香港返工、慢慢講有上下文就估到大意，正常語速就跟唔上），你嘅問題通常唔係「識唔識個字」，而係呢四樣：</p>
+    <div class="grid2">
+      <div><span class="pill red">1 · 粵語專用字</span><p class="muted" style="margin-top:6px">咗、緊、嘅、佢、俾、攞、喺、冇……一句入面佔三成，聽唔出就斷線。</p></div>
+      <div><span class="pill red">2 · 句尾語氣詞</span><p class="muted" style="margin-top:6px">啦、喎、囉、咋、㗎、嘛，決定句子係提醒、抱怨定驚訝。</p></div>
+      <div><span class="pill amber">3 · 語速同連讀</span><p class="muted" style="margin-top:6px">香港人講嘢快，又成日吞音，例如「係唔係」講成「係咪」。</p></div>
+      <div><span class="pill amber">4 · 中英夾雜</span><p class="muted" style="margin-top:6px">send、check、follow、OT、book 位，用粵語聲調讀英文，最易估錯。</p></div>
+    </div>
+    <p>你嘅優勢係每日身處粵語環境，同普通話有大量同源詞。只要每日 30 分鐘、專攻上面四樣，<b>8 個星期</b>應該可以聽明辦公室日常對話約八成、開會跟得上大意。</p>
+    <div class="row"><a class="btn" href="#test">做 15 題聽力測驗，校準起步點</a>${S.test?`<span class="pill">已測：${esc(S.test.level)}，${S.test.score}/15</span>`:""}</div>
+  </section>
+
+  <section class="card">
+    <div class="eyebrow">今日課堂</div>
+    ${L?`<h2>Day ${nl}：${esc(L.title)}</h2><p class="muted">${esc(L.scene)} · 重點：${esc(L.focus)}</p>
+    <div class="row"><a class="btn primary" href="#l${nl}">開始今日 30 分鐘</a><span class="muted">已完成 ${Object.keys(S.done).length} / 10 課</span></div>`
+    :`<h2>頭兩個星期嘅課已經全部完成</h2><p>返去同老師講「開第 3 週」，我會按你嘅錯題同興趣出新課。</p>`}
+  </section>
+
+  ${(()=>{const q=dueIds(),n=q.due.length+q.fresh.length,total=Object.keys(S.cards).length;return `<section class="card">
+    <div class="eyebrow">今日複習</div>
+    ${total?`<h2>${n?`今日有 ${n} 張卡要複習`:"今日嘅複習已經清晒"}</h2>
+    <p class="muted">${q.due.length} 張到期舊卡 · ${q.fresh.length} 張新卡（每日最多 ${NEW_PER_DAY} 張新卡）· 卡組共 ${total} 張</p>
+    ${n?`<div class="row"><a class="btn primary" href="#review">開始複習（約 ${Math.max(1,Math.round(n*12/60))} 分鐘）</a></div>`:""}`
+    :`<h2>完成第一課之後就會有複習卡</h2><p class="muted">每完成一課，嗰課嘅重點詞同對話句子會加入卡組，系統按遺忘曲線安排幾時再聽。測驗答錯嘅題目都會加入。</p>`}
+  </section>`})()}
+
+  <section class="card">
+    <div class="eyebrow">發音基本功 · 六個聲調</div>
+    <p>每課對話嘅字上面都標咗粵拼，顏色代表聲調高低。開始第一課之前，先將呢六個聲調聽熟、跟讀幾次。</p>
+    ${toneChart()}
+  </section>
+
+  <section class="card">
+    <div class="eyebrow">每日 30 分鐘點分配</div>
+    <div class="routine">
+      <div class="step"><div class="min">0–5′</div><div><b>複習</b>：做晒「複習」頁今日到期嘅卡（先聽、再揭答案、自己評分）。系統按遺忘曲線決定邊張今日要複習。</div></div>
+      <div class="step"><div class="min">5–10′</div><div><b>盲聽</b>：唔睇字聽全段兩次，答 3 條理解題。答錯唔緊要，係要知道自己卡喺邊。</div></div>
+      <div class="step"><div class="min">10–16′</div><div><b>對字精聽</b>：逐句播，睇字、粵拼同普通話，搵出邊句聽唔出、點解（專用字？語氣詞？聲調？英文？）。</div></div>
+      <div class="step"><div class="min">16–21′</div><div><b>影子跟讀</b>：每句 0.9× 跟住講兩次。講得出嘅音，先聽得出。</div></div>
+      <div class="step"><div class="min">21–27′</div><div><b>真實素材</b>：聽 5 分鐘 RTHK 或港劇（開中文字幕），只做一件事：數今日學嘅字出現幾多次。</div></div>
+      <div class="step"><div class="min">27–30′</div><div><b>收尾</b>：1.15× 再盲聽一次全段，然後撳「完成今日課」。仲有一個<b>生活任務</b>，返工落街順手做。</div></div>
+    </div>
+    <p class="muted">份量：每日 1 段對話（6–11 句）＋ 8 個重點詞。每星期 5 課，週六只做複習卡，再補返平日未清嘅，週日睇一集港劇當獎勵。8 個星期約 40 段對話、300+ 個常用說法。</p>
+  </section>
+
+  <section class="card">
+    <div class="eyebrow">真實素材（每日 5 分鐘用）</div>
+    <ul class="clean">
+      <li><a href="https://www.rthk.hk" target="_blank" rel="noopener">香港電台 RTHK</a>：新聞同清談節目，發音標準，第 6 週之後主力用。</li>
+      <li><a href="https://news.tvb.com" target="_blank" rel="noopener">TVB 新聞</a>：短片段，有字幕，適合聽數字、地名。</li>
+      <li>港劇／YouTube 生活頻道：開中文字幕，揀辦公室或者家庭題材，對白最貼近日常。</li>
+      <li><a href="https://words.hk" target="_blank" rel="noopener">粵典 words.hk</a>：查唔識嘅口語詞同粵拼。</li>
+    </ul>
+  </section>
+  </div>`;
+  bindTones(view);
+}
+
+function vRoute(){
+  const cur=nextLesson();
+  view.innerHTML=`<section class="card"><div class="eyebrow">八星期路線</div><h2>由高頻助詞，去到聽新聞</h2>
+  <p class="muted">每個站係一個星期。頭兩個星期嘅 10 課已經準備好；之後每完成一個星期，返嚟同老師講，我會按你嘅錯題同興趣出下一個星期嘅課。</p>
+  <div class="mtr">${WEEKS.map(w=>{
+    const ids=w.lessons||[];const allDone=ids.length&&ids.every(i=>S.done[i]);const now=ids.includes(cur);
+    return `<div class="station ${allDone?"done":""} ${now?"now":""}"><div class="dot">${w.n}</div><div class="body">
+      <h3>第 ${w.n} 週 · ${esc(w.name)}</h3><p class="muted">${esc(w.goal)}</p>
+      ${ids.length?`<div class="lessons">${ids.map(i=>`<a class="lchip ${S.done[i]?"done":""}" href="#l${i}">Day ${i} · ${esc(LESSONS[i].title)}</a>`).join("")}</div>`:`<span class="pill amber" style="justify-self:start">完成上一週後同老師講「開第 ${w.n} 週」</span>`}
+    </div></div>`}).join("")}</div></section>`;
+}
+
+function vLesson(id){
+  const L=LESSONS[id]; if(!L){location.hash="#route";return}
+  const ck=S.checks[id]||{};
+  const steps=["盲聽兩次，答咗理解題","對字逐句聽，搵出聽唔明嘅句","每句影子跟讀兩次","聽 5 分鐘真實素材，數今日嘅詞","1.15× 再盲聽一次全段"];
+  view.innerHTML=`
+  <div style="display:grid;gap:20px">
+  <section class="card">
+    <div class="row"><a href="#route" class="muted">← 路線</a><span class="pill">Day ${id}</span>${S.done[id]?'<span class="pill">已完成</span>':""}</div>
+    <h2>${esc(L.title)}</h2>
+    <p class="muted">${esc(L.scene)}</p>
+    <p><b>今日重點：</b>${esc(L.focus)}</p>
+  </section>
+
+  <div class="toolbar">
+    <div class="row">
+      <button class="btn primary" id="playall">${PLAY}<span>播全段</span></button>
+      <button class="btn" id="blindbtn" aria-pressed="true">盲聽中：字已隱藏</button>
+      <button class="btn" id="jpbtn" aria-pressed="true">隱藏粵拼</button>
+      <button class="btn" id="zhbtn" aria-pressed="false">顯示普通話</button>
+    </div>
+    ${rateSeg()}
+  </div>
+
+  <section class="card">
+    <div class="row" style="justify-content:space-between"><span class="eyebrow">對話</span>${toneLegend()}</div>
+    <div id="lines" class="blind hidezh ${showJP?"":"hidejp"}">
+    ${L.lines.map((l,i)=>`<div class="line" data-i="${i}"><button class="playbtn play" data-say="${i}" aria-label="播第 ${i+1} 句">${PLAY}</button><div class="spk">${esc(l[0])}</div><div class="yue has-jp">${rubyHTML(l[1],(JP[id]||[])[i])}</div><div class="zh">${esc(l[2])}</div></div>`).join("")}
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="eyebrow">理解題（盲聽後答）</div>
+    <div>${L.qs.map((q,qi)=>`<div class="q"><b>${qi+1}. ${esc(q[0])}</b><div class="opts">${q[1].map((o,oi)=>`<button class="opt" data-q="${qi}" data-o="${oi}">${esc(o)}</button>`).join("")}</div></div>`).join("")}</div>
+  </section>
+
+  <section class="card">
+    <div class="eyebrow">重點詞（撳一下聽發音）</div>
+    <div class="vocab">${L.vocab.map(v=>`<button class="vcard" data-word="${esc(v[0])}"><span class="w">${esc(v[0])}</span><span class="j">${esc(v[1])}</span><span class="m">${esc(v[2])}</span></button>`).join("")}</div>
+  </section>
+
+  <section class="card">
+    <div class="eyebrow">六個聲調（撳嚟聽）</div>
+    ${toneChart()}
+  </section>
+
+  <section class="card">
+    <div class="eyebrow">今日步驟</div>
+    <div class="checks">${steps.map((s,i)=>`<label><input type="checkbox" id="ck-${id}-${i}" data-ck="${i}" ${ck[i]?"checked":""}><span>${s}</span></label>`).join("")}</div>
+    <div class="task"><b>生活任務：</b>${esc(L.task)}</div>
+    <div class="row"><button class="btn primary" id="finish">${S.done[id]?"已完成（再撳更新日期）":"完成今日課"}</button>${LESSONS[id+1]?`<a class="btn" href="#l${id+1}">下一課 →</a>`:""}</div>
+  </section>
+  </div>`;
+
+  bindRate(view);
+  const linesEl=document.getElementById("lines");
+  const blindBtn=document.getElementById("blindbtn"),zhBtn=document.getElementById("zhbtn");
+  blindBtn.onclick=()=>{const b=linesEl.classList.toggle("blind");blindBtn.setAttribute("aria-pressed",b);blindBtn.textContent=b?"盲聽中：字已隱藏":"顯示緊粵語字"};
+  const jpBtn=document.getElementById("jpbtn");
+  const setJpBtn=()=>{jpBtn.setAttribute("aria-pressed",showJP);jpBtn.textContent=showJP?"隱藏粵拼":"顯示粵拼"};setJpBtn();
+  jpBtn.onclick=()=>{showJP=!showJP;try{localStorage.setItem(KEY+"-jp",showJP?"1":"0")}catch(e){}linesEl.classList.toggle("hidejp",!showJP);setJpBtn()};
+  bindTones(view);
+  zhBtn.onclick=()=>{const h=linesEl.classList.toggle("hidezh");zhBtn.setAttribute("aria-pressed",!h);zhBtn.textContent=h?"顯示普通話":"隱藏普通話"};
+  const speakers=[...new Set(L.lines.map(l=>l[0]))];
+  const pitchOf=s=>speakers.indexOf(s)%2?1.18:0.95;
+  view.querySelectorAll("[data-say]").forEach(b=>b.onclick=()=>{stopSpeak();const l=L.lines[b.dataset.say];hl(b.dataset.say);speak(l[1],{pitch:pitchOf(l[0])}).then(()=>hl(-1))});
+  function hl(i){linesEl.querySelectorAll(".line").forEach(x=>x.classList.toggle("speaking",x.dataset.i==i))}
+  let playing=false;const pa=document.getElementById("playall");
+  pa.onclick=async()=>{
+    if(playing){playing=false;stopSpeak();hl(-1);pa.innerHTML=PLAY+"<span>播全段</span>";return}
+    playing=true;pa.innerHTML=STOP+"<span>停止</span>";stopSpeak();
+    for(let i=0;i<L.lines.length&&playing;i++){hl(i);await speak(L.lines[i][1],{pitch:pitchOf(L.lines[i][0])});await new Promise(r=>setTimeout(r,350))}
+    playing=false;hl(-1);pa.innerHTML=PLAY+"<span>播全段</span>";
+  };
+  view.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{
+    const q=L.qs[b.dataset.q];const right=Number(b.dataset.o)===q[2];
+    view.querySelectorAll(`.opt[data-q="${b.dataset.q}"]`).forEach(x=>{x.classList.remove("right","wrong");if(Number(x.dataset.o)===q[2]&&right)x.classList.add("right")});
+    b.classList.add(right?"right":"wrong");
+  });
+  view.querySelectorAll(".vcard").forEach(b=>b.onclick=()=>{stopSpeak();speak(b.dataset.word)});
+  view.querySelectorAll("[data-ck]").forEach(c=>c.onchange=()=>{S.checks[id]=S.checks[id]||{};S.checks[id][c.dataset.ck]=c.checked;save()});
+  document.getElementById("finish").onclick=()=>{S.done[id]=today();addLessonCards(id);save();refreshStats();const f=document.getElementById("finish");f.textContent="已完成 ✓";};
+}
+
+/* Placement test */
+let T=null;
+function vTest(){
+  if(!T){
+    view.innerHTML=`<section class="card"><div class="eyebrow">聽力測驗 · 15 題 · 約 6 分鐘</div>
+    <h2>聽一句，揀普通話意思</h2>
+    <p>由簡單去到快語速：單詞短句 → 日常句子 → 辦公室句子 → 快語速＋俗語。每題最多播 3 次，唔好睇字、唔好估太耐，聽唔明就揀最似嘅。</p>
+    <p class="muted">測驗會用你部機嘅粵語（香港）合成聲音。真人講嘢會再快啲、再含糊啲，所以分數只係起步參考。</p>
+    ${S.test?`<p><span class="pill">上次：${esc(S.test.level)}，${S.test.score}/15（${esc(S.test.date)}）</span></p>`:""}
+    <div class="row"><button class="btn primary" id="start">開始測驗</button></div></section>`;
+    document.getElementById("start").onclick=()=>{T={i:0,ans:[],plays:0};vTest()};
+    return;
+  }
+  if(T.i>=TEST.length)return testResult();
+  const q=TEST[T.i];
+  view.innerHTML=`<section class="card">
+    <div class="row" style="justify-content:space-between"><span class="eyebrow">第 ${T.i+1} / ${TEST.length} 題 · ${LV_NAME[q.lv]}</span><span class="muted" style="font-variant-numeric:tabular-nums">已播 <b id="pc">${T.plays}</b> / 3</span></div>
+    <div class="meter"><i style="width:${T.i/TEST.length*100}%"></i></div>
+    <button class="bigplay" id="tplay" aria-label="播放題目">${PLAY}</button>
+    <div class="opts">${q.opts.map((o,i)=>`<button class="opt" data-o="${i}">${esc(o)}</button>`).join("")}</div>
+    <div class="row"><button class="btn small" id="tquit">放棄測驗</button></div>
+  </section>`;
+  const tp=document.getElementById("tplay");
+  tp.onclick=()=>{if(T.plays>=3)return;T.plays++;document.getElementById("pc").textContent=T.plays;if(T.plays>=3)tp.disabled=true;stopSpeak();speak(q.yue,{rate:q.rate})};
+  if(T.plays>=3)tp.disabled=true;
+  view.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{
+    if(T.plays===0){tp.focus();tp.animate?.([{transform:"scale(1)"},{transform:"scale(1.08)"},{transform:"scale(1)"}],{duration:300});return}
+    T.ans.push({ok:Number(b.dataset.o)===q.a,pick:Number(b.dataset.o),plays:T.plays});
+    T.i++;T.plays=0;stopSpeak();vTest();
+  });
+  document.getElementById("tquit").onclick=()=>{T=null;stopSpeak();vTest()};
+}
+function testResult(){
+  const score=T.ans.filter(a=>a.ok).length;
+  const by={};TEST.forEach((q,i)=>{by[q.lv]=by[q.lv]||{ok:0,n:0};by[q.lv].n++;if(T.ans[i].ok)by[q.lv].ok++});
+  let level,advice;
+  if(score<=4){level="L1 入門";advice="由 Day 1 開始，每課盲聽多聽一次（三次），語速固定 0.75×，先建立對「咗／緊／未」嘅反應。"}
+  else if(score<=8){level="L2 關鍵詞";advice="同你自評一致。由 Day 1 開始照路線行，語速用 0.9×，盲聽兩次後先睇字。"}
+  else if(score<=12){level="L3 日常";advice="Day 1–3 可以一日做兩課快速過，由 Day 4 開始正常進度，語速用 1.0×，重點放喺辦公室同中英夾雜。"}
+  else{level="L4 進階";advice="第 1 週快速過一次當重溫，直接用 1.15× 盲聽。同老師講「跳去第 4 週」，我會出會議同新聞程度嘅材料。"}
+  const weak=Object.entries(by).filter(([k,v])=>v.ok/v.n<0.75).map(([k])=>LV_NAME[k]);
+  S.test={score,level,date:today(),by};T.ans.forEach((a,i)=>{if(!a.ok)addCard(`t0-${i}`)});save();refreshStats();
+  const wrong=T.ans.map((a,i)=>({a,q:TEST[i],jp:TEST_JP[i]})).filter(x=>!x.a.ok);
+  view.innerHTML=`<section class="card">
+    <div class="eyebrow">測驗結果</div>
+    <div class="result-level">${level}</div>
+    <p>答啱 <b>${score} / 15</b>。${esc(advice)}</p>
+    ${weak.length?`<p>要加強：${weak.map(w=>`<span class="pill red">${esc(w)}</span>`).join(" ")}</p>`:""}
+    <div class="tablewrap"><table class="simple"><thead><tr><th>部分</th><th>答啱</th></tr></thead><tbody>
+    ${Object.entries(by).map(([k,v])=>`<tr><td>${LV_NAME[k]}</td><td>${v.ok} / ${v.n}</td></tr>`).join("")}</tbody></table></div>
+    ${wrong.length?`<div class="eyebrow">答錯嘅題（撳嚟再聽）</div><div>${wrong.map(x=>`<div class="line"><button class="playbtn" data-yue="${esc(x.q.yue)}" aria-label="再聽">${PLAY}</button><div class="yue has-jp">${rubyHTML(x.q.yue,x.jp)}</div><div class="zh">${esc(x.q.opts[x.q.a])}</div></div>`).join("")}</div>`:""}
+    <div class="row"><a class="btn primary" href="#today">返去今日課堂</a><button class="btn" id="retest">再測一次</button></div>
+    <p class="muted" style="font-size:.85rem">想我再細啲分析？將呢個分數同答錯嘅題目話俾老師聽（直接喺對話入面講就得）。</p>
+  </section>`;
+  view.querySelectorAll("[data-yue]").forEach(b=>b.onclick=()=>{stopSpeak();speak(b.dataset.yue)});
+  document.getElementById("retest").onclick=()=>{T={i:0,ans:[],plays:0};vTest()};
+}
+
+/* ---------------- Spaced repetition (FSRS-4.5) ----------------
+   Forgetting curve: R(t) = (1 + F·t/S)^-0.5, F = 19/81, so R = 90% exactly when t = S.
+   S = stability (days until recall drops to 90%), D = difficulty (1–10).
+   Default weights are FSRS-4.5's, fitted on a large body of Anki review logs. */
+const FSRS={
+  w:[0.4872,1.4003,3.7145,13.8206,5.1618,1.2298,0.8975,0.031,1.6474,0.1367,1.0461,2.1072,0.0793,0.3246,1.587,0.2272,2.8755],
+  DECAY:-0.5, F:19/81, RET:0.9, MAXI:365
+};
+const clampD=d=>Math.min(10,Math.max(1,d));
+const dayNum=s=>{const [y,m,d]=s.split("-").map(Number);return Math.round(Date.UTC(y,m-1,d)/864e5)};
+const numDay=n=>{const t=new Date(n*864e5);return t.getUTCFullYear()+"-"+String(t.getUTCMonth()+1).padStart(2,"0")+"-"+String(t.getUTCDate()).padStart(2,"0")};
+function retr(t,s){return Math.pow(1+FSRS.F*t/s,FSRS.DECAY)}
+function ivl(s){return Math.min(FSRS.MAXI,Math.max(1,Math.round(s/FSRS.F*(Math.pow(FSRS.RET,1/FSRS.DECAY)-1))))}
+/* Returns the card's next state for grade g (1 重來, 2 困難, 3 良好, 4 簡單) reviewed on day `now` */
+function schedule(c,g,now){
+  const w=FSRS.w; let s,d;
+  if(c.state==="new"){
+    s=w[g-1]; d=clampD(w[4]-(g-3)*w[5]);
+  }else{
+    const t=Math.max(0,now-dayNum(c.last)); const R=retr(t,c.s);
+    const d0=w[4]-(4-3)*w[5];
+    d=clampD(w[7]*d0+(1-w[7])*(c.d-w[6]*(g-3)));
+    if(g===1){
+      s=Math.min(c.s, w[11]*Math.pow(d,-w[12])*(Math.pow(c.s+1,w[13])-1)*Math.exp(w[14]*(1-R)));
+    }else{
+      s=c.s*(Math.exp(w[8])*(11-d)*Math.pow(c.s,-w[9])*(Math.exp(w[10]*(1-R))-1)*(g===2?w[15]:1)*(g===4?w[16]:1)+1);
+    }
+  }
+  s=Math.max(0.1,s);
+  const days=g===1?0:ivl(s);
+  return {...c,s,d,state:"review",last:numDay(now),due:numDay(now+days),reps:(c.reps||0)+1,lapses:(c.lapses||0)+(g===1&&c.state!=="new"?1:0),days};
+}
+const fmtDays=n=>n===0?"今日再嚟":n<30?`${n} 日`:n<365?`${Math.round(n/30)} 個月`:"1 年";
+
+/* Card content lookup */
+function cardContent(id){
+  const m=id.match(/^([vst])(\d+)-(\d+)$/); if(!m)return null;
+  const [,k,a,b]=m; const L=LESSONS[a];
+  if(k==="v"&&L&&L.vocab[b]){const v=L.vocab[b];return {yue:v[0],jp:v[1],zh:v[2],src:`Day ${a} 詞語`}}
+  if(k==="s"&&L&&L.lines[b]){const l=L.lines[b];return {yue:l[1],jp:(JP[a]||[])[b],zh:l[2],src:`Day ${a} 對話`}}
+  if(k==="t"&&TEST[b]){const q=TEST[b];return {yue:q.yue,jp:TEST_JP[b],zh:q.opts[q.a],src:"測驗錯題"}}
+  return null;
+}
+function addCard(id){if(!S.cards[id]&&cardContent(id))S.cards[id]={state:"new",added:today()}}
+function addLessonCards(lid){const L=LESSONS[lid];if(!L)return;L.vocab.forEach((_,i)=>addCard(`v${lid}-${i}`));L.lines.forEach((_,i)=>addCard(`s${lid}-${i}`))}
+const NEW_PER_DAY=20;
+function newLeft(){return S.newDay&&S.newDay.date===today()?Math.max(0,NEW_PER_DAY-S.newDay.n):NEW_PER_DAY}
+function dueIds(){
+  const t=dayNum(today());
+  const due=Object.entries(S.cards).filter(([,c])=>c.state!=="new"&&dayNum(c.due)<=t).sort((a,b)=>dayNum(a[1].due)-dayNum(b[1].due)).map(([k])=>k);
+  const fresh=Object.entries(S.cards).filter(([,c])=>c.state==="new").sort((a,b)=>a[1].added<b[1].added?-1:1).map(([k])=>k).slice(0,newLeft());
+  return {due,fresh};
+}
+function dueCount(){const q=dueIds();return q.due.length+q.fresh.length}
+
+/* Review session */
+let R=null;
+function startSession(){const q=dueIds();R={queue:[...q.due,...q.fresh],shown:false,done:0,again:0,startedPlay:false};}
+function vReview(){
+  if(!R||(!R.queue.length&&R.done===0))startSession();
+  const total=Object.keys(S.cards).length;
+  if(!R.queue.length){
+    view.innerHTML=`<div style="display:grid;gap:20px"><section class="card">
+      <div class="eyebrow">今日複習</div>
+      <h2>${R.done?`做完喇！今日複習咗 ${R.done} 張`:total?"今日冇卡要複習":"卡組仲係空嘅"}</h2>
+      <p class="muted">${total?`卡組一共 ${total} 張。下面係之後 14 日每日要複習幾多張。`:"完成一課之後，嗰課嘅重點詞同對話句子會自動加入卡組；測驗答錯嘅題目都會加入。"}</p>
+      ${total?forecastHTML():""}
+      <div class="row">${total?"":`<a class="btn primary" href="#today">去上第一課</a>`}</div>
+    </section>${curveCard()}</div>`;
+    R=null; return;
+  }
+  const id=R.queue[0], c=S.cards[id], cc=cardContent(id);
+  if(!cc){R.queue.shift();delete S.cards[id];save();return vReview()}
+  const now=dayNum(today());
+  const prev=[1,2,3,4].map(g=>schedule(c,g,now).days);
+  const isNew=c.state==="new";
+  view.innerHTML=`<div style="display:grid;gap:20px"><section class="card">
+    <div class="row" style="justify-content:space-between"><span class="eyebrow">今日複習 · 尚餘 ${R.queue.length} 張</span><span>${isNew?'<span class="pill amber">新卡</span>':`<span class="pill">上次 ${esc(c.last)} · 第 ${c.reps+1} 次</span>`}</span></div>
+    <p class="muted" style="text-align:center">${R.shown?"對答案，然後揀你啱先嘅表現":"先聽，喺心入面講出意思，再揭答案"}</p>
+    <div class="row" style="justify-content:center;gap:16px"><button class="bigplay" id="rplay" aria-label="播放">${PLAY}</button></div>
+    <div class="row" style="justify-content:center">${rateSeg()}</div>
+    ${R.shown?`<div style="text-align:center;display:grid;gap:6px">
+        <div class="dict-ans yue has-jp ${showJP?"":"hidejp"}">${rubyHTML(cc.yue,cc.jp)}</div>
+        <p>${esc(cc.zh)}</p><p class="muted" style="font-size:.85rem">出自 ${esc(cc.src)}</p></div>
+      <div class="grades">
+        ${[["重來","完全聽唔明",1],["困難","諗咗好耐／半估",2],["良好","聽得明",3],["簡單","一聽就明",4]].map(([n,h,g])=>`<button class="grade g${g}" data-g="${g}"><b>${n}</b><span>${h}</span><em>${fmtDays(prev[g-1])}</em></button>`).join("")}
+      </div>`
+    :`<div class="row" style="justify-content:center"><button class="btn primary" id="rshow">揭答案</button></div>`}
+  </section>
+  <p class="muted" style="font-size:.85rem;text-align:center">快捷鍵：空白鍵 播放／揭答案 · 1 2 3 4 評分</p></div>`;
+  bindRate(view);
+  const play=()=>{stopSpeak();speak(cc.yue)};
+  document.getElementById("rplay").onclick=play;
+  if(!R.startedPlay){R.startedPlay=true;play()}
+  const sh=document.getElementById("rshow");if(sh)sh.onclick=()=>{R.shown=true;vReview()};
+  view.querySelectorAll("[data-g]").forEach(b=>b.onclick=()=>grade(Number(b.dataset.g)));
+}
+function grade(g){
+  if(!R||!R.shown)return;
+  const id=R.queue.shift(), c=S.cards[id];
+  if(c.state==="new"){S.newDay=S.newDay&&S.newDay.date===today()?S.newDay:{date:today(),n:0};S.newDay.n++}
+  S.cards[id]=schedule(c,g,dayNum(today()));
+  S.revDays=S.revDays||{};S.revDays[today()]=(S.revDays[today()]||0)+1;
+  if(g===1)R.queue.push(id);
+  R.done++;R.shown=false;R.startedPlay=false;save();refreshStats();vReview();
+}
+document.addEventListener("keydown",e=>{
+  if(location.hash!=="#review"||!R||e.target.closest("input,select,textarea"))return;
+  if(e.key===" "){e.preventDefault();if(R.shown)document.getElementById("rplay")?.click();else{R.shown=true;vReview()}}
+  else if(R.shown&&/^[1-4]$/.test(e.key))grade(Number(e.key));
+});
+
+function forecastHTML(){
+  const t=dayNum(today()),days=[...Array(14)].map((_,i)=>0);
+  Object.values(S.cards).forEach(c=>{if(c.state==="new")return;const k=Math.max(0,dayNum(c.due)-t);if(k<14)days[k]++});
+  const mx=Math.max(1,...days);
+  return `<div class="fc">${days.map((n,i)=>`<div class="fcol"><span class="fn">${n||""}</span><i style="height:${n/mx*60}px"></i><span class="fd">${i===0?"今日":i===1?"聽日":"+"+i}</span></div>`).join("")}</div>`;
+}
+function curveCard(){
+  // Draw R(t) for stabilities a card typically reaches after successive "良好" reviews
+  const W=560,H=200,pl=40,pr=12,pt=12,pb=30,T=60;
+  const x=t=>pl+(W-pl-pr)*t/T, y=r=>pt+(H-pt-pb)*(1-r)/(1-0.5);
+  const Ss=[{s:3.7,lab:"第 1 次"},{s:14.9,lab:"第 2 次"},{s:50,lab:"第 3 次"}];
+  const cols=["var(--red)","var(--amber)","var(--green)"];
+  const path=s=>[...Array(121)].map((_,i)=>{const t=i/2;const r=Math.max(.5,retr(t,s));return (i?"L":"M")+x(t).toFixed(1)+" "+y(r).toFixed(1)}).join("");
+  const grid=[1,.9,.8,.7,.6,.5].map(r=>`<line x1="${pl}" x2="${W-pr}" y1="${y(r)}" y2="${y(r)}" class="gl${r===.9?" g90":""}"/><text x="${pl-6}" y="${y(r)+4}" text-anchor="end">${Math.round(r*100)}%</text>`).join("");
+  const xt=[0,10,20,30,40,50,60].map(t=>`<text x="${x(t)}" y="${H-10}" text-anchor="middle">${t}</text>`).join("");
+  return `<section class="card">
+    <div class="eyebrow">點解咁排複習時間</div>
+    <h3>每複習一次，遺忘曲線就變平啲</h3>
+    <div class="tablewrap"><svg class="curve" viewBox="0 0 ${W} ${H}" role="img" aria-label="記憶保留率隨日數下降的曲線，三條線分別代表複習一、二、三次之後">
+      ${grid}${xt}
+      ${Ss.map((o,i)=>`<path d="${path(o.s)}" style="stroke:${cols[i]}"/>`).join("")}
+      <text x="${W-pr}" y="${y(.9)-5}" text-anchor="end" class="lab90">目標 90%</text>
+    </svg></div>
+    <div class="legend">${Ss.map((o,i)=>`<span><i style="background:${cols[i]}"></i>${o.lab}複習後（約 ${Math.round(o.s)} 日跌到 90%）</span>`).join("")}<span>橫軸：日數</span></div>
+    <p class="muted" style="font-size:.88rem">呢個係 Ebbinghaus 遺忘曲線嘅現代版本。排程用 FSRS 演算法（Anki 而家預設用嘅），按你每次「重來／困難／良好／簡單」計出每張卡記得幾牢，喺記憶跌到大約 90% 嗰日先叫你複習。記得越牢，下次隔得越耐，所以每日複習量唔會越堆越多。</p>
+  </section>`;
+}
+
+/* ---------------- Router ---------------- */
+function route(){
+  stopSpeak();
+  const h=(location.hash||"#today").slice(1);
+  let tab=h;
+  if(/^l\d+$/.test(h)){tab="route";vLesson(Number(h.slice(1)))}
+  else if(h==="route")vRoute();
+  else if(h==="test")vTest();
+  else if(h==="review")vReview();
+  else{tab="today";vToday()}
+  document.querySelectorAll("nav.tabs a").forEach(a=>{if(a.getAttribute("href")==="#"+tab)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current")});
+  refreshStats();
+  window.scrollTo(0,0);
+}
+window.addEventListener("hashchange",route);
+Object.keys(S.done).forEach(id=>addLessonCards(Number(id)));save();
+route();
+</script>
+
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+}
+if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+</script>
+</body>
+</html>
