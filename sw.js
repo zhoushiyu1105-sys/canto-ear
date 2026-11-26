@@ -1,5 +1,5 @@
 // 港話聽力課 offline cache. Version changes whenever index.html changes.
-const CACHE = "canto-ear-d6c31ce3c8";
+const CACHE = "canto-ear-cc1ddf402d";
 const FILES = ["./", "index.html", "manifest.webmanifest", "icon-180.png", "icon-192.png", "icon-512.png", "audio-pack.js"];
 
 self.addEventListener("install", e => {

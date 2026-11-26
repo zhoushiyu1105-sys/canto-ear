@@ -213,6 +213,7 @@ svg.curve .lab90{fill:var(--ink)}
 .timer i{display:block;height:100%;background:var(--green);transition:width .1s linear}
 .timer.low i{background:var(--red)}
 .combo{color:var(--red);font-weight:700}
+.inp{flex:1;min-width:0;border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--card);color:var(--ink);font:inherit;font-family:var(--f-mono);font-size:.9rem}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--paper);padding:10px 18px;border-radius:999px;font-weight:600;z-index:50;box-shadow:0 6px 20px rgba(0,0,0,.25);max-width:calc(100% - 32px);text-align:center}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -533,7 +534,8 @@ function rubyHTML(text,jp){
 const KEY="canto-ear-v1";
 function load(){try{return JSON.parse(localStorage.getItem(KEY))||{}}catch(e){return {}}}
 let S=Object.assign({done:{},checks:{},test:null,cards:{},newDay:null,revDays:{},slang:{},game:{best:0,bestCombo:0,plays:0},badges:{}},load());
-function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function saveLocal(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function save(){saveLocal();if(typeof syncSoon==="function"&&!syncing)syncSoon()}
 const today=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
 function streak(){
   const days=new Set(Object.values(S.done));let n=0;const d=new Date();
@@ -693,9 +695,12 @@ function vToday(){
       <li><a href="https://words.hk" target="_blank" rel="noopener">粵典 words.hk</a>：查唔識嘅口語詞同粵拼。</li>
     </ul>
   </section>
+  ${syncCardHTML()}
+
   <section class="card"><div class="row" style="justify-content:space-between"><span class="eyebrow">徽章</span><span class="muted">${Object.keys(S.badges).length} / ${BADGES.length}</span></div>${badgesHTML()}<div class="row"><a class="btn" href="#game">玩一局聽力搶答</a></div></section>
   </div>`;
   bindTones(view);
+  bindSync(view);
 }
 
 function vRoute(){
@@ -1134,6 +1139,143 @@ function gameResult(){
   G.over="shown";
 }
 
+/* ---------------- Sync (computer ⇄ phone) via a private GitHub Gist ----------------
+   Each device keeps its own copy in localStorage. When online, sync() pulls the Gist,
+   merges it with the local copy (rules in mergeState), saves, and pushes the result back. */
+const SYNC_FILE="canto-ear-progress.json";
+const SYNC_KEY=KEY+"-sync";
+function syncCfg(){try{return JSON.parse(localStorage.getItem(SYNC_KEY))||null}catch(e){return null}}
+function setSyncCfg(c){try{c?localStorage.setItem(SYNC_KEY,JSON.stringify(c)):localStorage.removeItem(SYNC_KEY)}catch(e){}}
+
+function mergeState(a,b){
+  if(!b||typeof b!=="object")return a;
+  const m=JSON.parse(JSON.stringify(a||{}));
+  const maxD=(x,y)=>!x?y:!y?x:(x>y?x:y), minD=(x,y)=>!x?y:!y?x:(x<y?x:y);
+  const keys=(x,y)=>new Set([...Object.keys(x||{}),...Object.keys(y||{})]);
+  // finished lessons: union, keep the most recent date
+  m.done={};keys(a.done,b.done).forEach(k=>m.done[k]=maxD((a.done||{})[k],(b.done||{})[k]));
+  // ticked lesson steps: union
+  m.checks={};keys(a.checks,b.checks).forEach(l=>{m.checks[l]={};keys((a.checks||{})[l],(b.checks||{})[l]).forEach(i=>m.checks[l][i]=!!(((a.checks||{})[l]||{})[i]||((b.checks||{})[l]||{})[i]))});
+  // placement test: the latest one
+  const ta=a.test,tb=b.test;m.test=!ta?(tb||null):!tb?ta:(tb.date>ta.date||(tb.date===ta.date&&tb.score>ta.score))?tb:ta;
+  // review cards: the copy that was reviewed most recently (reviewed beats new; then later date; then more reviews)
+  const newer=(x,y)=>{if(!x)return y;if(!y)return x;
+    const rx=x.state==="new"?0:1,ry=y.state==="new"?0:1;if(rx!==ry)return rx>ry?x:y;
+    if((x.last||"")!==(y.last||""))return (x.last||"")>(y.last||"")?x:y;
+    return (y.reps||0)>(x.reps||0)?y:x};
+  m.cards={};keys(a.cards,b.cards).forEach(id=>m.cards[id]=newer((a.cards||{})[id],(b.cards||{})[id]));
+  // new cards introduced today
+  const na=a.newDay,nb=b.newDay;m.newDay=!na?(nb||null):!nb?na:na.date===nb.date?{date:na.date,n:Math.max(na.n,nb.n)}:(na.date>nb.date?na:nb);
+  // reviews per day: the larger count (never double-counts across repeated syncs)
+  m.revDays={};keys(a.revDays,b.revDays).forEach(d=>m.revDays[d]=Math.max((a.revDays||{})[d]||0,(b.revDays||{})[d]||0));
+  // slang eggs and badges: union, keep the first date
+  m.slang={};keys(a.slang,b.slang).forEach(k=>m.slang[k]=minD((a.slang||{})[k],(b.slang||{})[k]));
+  m.badges={};keys(a.badges,b.badges).forEach(k=>m.badges[k]=minD((a.badges||{})[k],(b.badges||{})[k]));
+  // game: best of both
+  const ga=a.game||{},gb=b.game||{};m.game={best:Math.max(ga.best||0,gb.best||0),bestCombo:Math.max(ga.bestCombo||0,gb.bestCombo||0),plays:Math.max(ga.plays||0,gb.plays||0)};
+  return m;
+}
+
+async function gh(token,path,opts={}){
+  let r;
+  try{
+    r=await fetch("https://api.github.com"+path,{...opts,cache:"no-store",headers:{"Authorization":"Bearer "+token,"Accept":"application/vnd.github+json",...(opts.body?{"Content-Type":"application/json"}:{})}});
+  }catch(e){const err=new Error("network");err.kind="network";throw err}
+  if(!r.ok){const err=new Error("http "+r.status);err.kind=r.status===401||r.status===403?"auth":r.status===404?"missing":"http";err.status=r.status;throw err}
+  return r.json();
+}
+const syncPayload=()=>{const {done,checks,test,cards,newDay,revDays,slang,game,badges}=S;return JSON.stringify({v:1,done,checks,test,cards,newDay,revDays,slang,game,badges})};
+async function findOrCreateGist(token){
+  for(let page=1;page<=5;page++){
+    const list=await gh(token,`/gists?per_page=100&page=${page}`);
+    const hit=list.find(g=>g.files&&g.files[SYNC_FILE]);
+    if(hit)return hit.id;
+    if(list.length<100)break;
+  }
+  const g=await gh(token,"/gists",{method:"POST",body:JSON.stringify({description:"港話聽力課 學習進度（自動同步，請勿手動修改）",public:false,files:{[SYNC_FILE]:{content:syncPayload()}}})});
+  return g.id;
+}
+let syncing=false,syncTimer=null,syncAgain=false;
+async function sync(reason){
+  const cfg=syncCfg(); if(!cfg)return {ok:false,msg:"未連接"};
+  if(syncing){syncAgain=true;return {ok:false,msg:"同步緊"}}
+  syncing=true;setSyncMsg("同步緊……");
+  try{
+    let g;
+    try{g=await gh(cfg.token,"/gists/"+cfg.gist)}
+    catch(e){if(e.kind!=="missing")throw e;cfg.gist=await findOrCreateGist(cfg.token);setSyncCfg(cfg);g=await gh(cfg.token,"/gists/"+cfg.gist)}
+    const f=g.files&&g.files[SYNC_FILE];
+    let remoteText=f?f.content:"";
+    if(f&&f.truncated&&f.raw_url){try{remoteText=await (await fetch(f.raw_url,{cache:"no-store"})).text()}catch(e){}}
+    let remote=null;try{remote=remoteText?JSON.parse(remoteText):null}catch(e){remote=null}
+    const before=JSON.stringify(S);
+    const merged=mergeState(S,remote);
+    Object.assign(S,merged);
+    const localChanged=JSON.stringify(S)!==before;
+    if(localChanged){Object.keys(S.done).forEach(id=>addLessonCards(Number(id)));saveLocal()}
+    const out=syncPayload();
+    if(!remote||out!==JSON.stringify((({v,done,checks,test,cards,newDay,revDays,slang,game,badges})=>({v:1,done,checks,test,cards,newDay,revDays,slang,game,badges}))(remote))){
+      await gh(cfg.token,"/gists/"+cfg.gist,{method:"PATCH",body:JSON.stringify({files:{[SYNC_FILE]:{content:out}}})});
+    }
+    cfg.last=Date.now();setSyncCfg(cfg);
+    setSyncMsg("");refreshSyncCard();
+    if(localChanged){refreshStats();if(!R&&!(G&&!G.over)&&!/^#l\d/.test(location.hash))route();else if(reason!=="auto")toast("已同步另一部機嘅進度");}
+    return {ok:true};
+  }catch(e){
+    const msg=e.kind==="auth"?"通行碼唔啱或者已經過期，請重新連接。":e.kind==="network"?"連唔到 GitHub，有網絡時會再試。":"同步失敗（"+(e.status||e.message)+"），稍後再試。";
+    setSyncMsg(msg);
+    return {ok:false,msg};
+  }finally{
+    syncing=false;
+    if(syncAgain){syncAgain=false;syncSoon(1500)}
+  }
+}
+function syncSoon(ms=5000){if(!syncCfg())return;clearTimeout(syncTimer);syncTimer=setTimeout(()=>sync("auto"),ms)}
+function setSyncMsg(t){const el=document.getElementById("syncmsg");if(el)el.textContent=t}
+const fmtTime=t=>{const d=new Date(t);return `${d.getMonth()+1}月${d.getDate()}日 ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`};
+const canSync=()=>/github\.io$/.test(location.hostname)||location.hostname==="localhost"||location.hostname==="127.0.0.1";
+
+function syncCardHTML(){
+  const c=syncCfg();
+  const body=!canSync()
+    ?`<p class="muted">呢個版本唔可以同步。請用你 GitHub 嘅網址（<b>你的用戶名.github.io/canto-ear/</b>）打開，先可以喺電腦同手機之間同步進度。</p>`
+    :c?`<p>上次同步：<b>${c.last?fmtTime(c.last):"未同步"}</b>。有網絡時，打開 app、完成課堂、複習或者玩完遊戲之後都會自動同步。</p>
+      <div class="row"><button class="btn primary" id="syncnow">立即同步</button><button class="btn" id="syncoff">中斷連接</button></div>`
+    :`<p>電腦同手機貼上同一個 GitHub 通行碼，進度就會自動合併同步。通行碼只會存喺呢部機。</p>
+      <label for="synctoken" class="muted" style="font-size:.85rem">GitHub 通行碼（ghp_ 開頭）</label>
+      <div class="row"><input id="synctoken" class="inp" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="ghp_……"><button class="btn primary" id="syncgo">連接</button></div>`;
+  return `<section class="card" id="synccard">
+    <div class="row" style="justify-content:space-between"><span class="eyebrow">電腦 ⇄ 手機同步</span>${c&&canSync()?'<span class="pill">已連接</span>':'<span class="pill amber">未連接</span>'}</div>
+    ${body}
+    <p class="muted" id="syncmsg" style="font-size:.85rem" aria-live="polite"></p>
+  </section>`;
+}
+function refreshSyncCard(){const el=document.getElementById("synccard");if(!el)return;el.outerHTML=syncCardHTML();bindSync(document)}
+function bindSync(root){
+  const go=root.querySelector("#syncgo");
+  if(go)go.onclick=async()=>{
+    const token=(root.querySelector("#synctoken").value||"").trim();
+    if(!/^(ghp_|github_pat_)\w{20,}$/.test(token)){setSyncMsg("通行碼格式唔啱，應該係 ghp_ 開頭嘅一長串字。");return}
+    go.disabled=true;setSyncMsg("連接緊 GitHub……");
+    try{
+      const gist=await findOrCreateGist(token);
+      setSyncCfg({token,gist,last:0});
+      const r=await sync("connect");
+      if(r.ok){refreshSyncCard();toast("同步已開啟")}
+    }catch(e){
+      setSyncMsg(e.kind==="auth"?"通行碼唔啱，或者冇勾選「gist」權限。":e.kind==="network"?"連唔到 GitHub，請檢查網絡。":"連接失敗（"+(e.status||e.message)+"）。");
+    }finally{go.disabled=false}
+  };
+  const now=root.querySelector("#syncnow");if(now)now.onclick=()=>sync("manual");
+  const off=root.querySelector("#syncoff");if(off)off.onclick=()=>{setSyncCfg(null);refreshSyncCard();toast("已中斷同步，呢部機嘅進度照樣保留")};
+}
+document.addEventListener("visibilitychange",()=>{
+  const c=syncCfg();if(!c||!canSync())return;
+  if(document.visibilityState==="visible"){if(Date.now()-(c.last||0)>60000)sync("auto")}
+  else if(syncTimer){clearTimeout(syncTimer);syncTimer=null;sync("auto")}
+});
+window.addEventListener("online",()=>{if(syncCfg()&&canSync())syncSoon(1000)});
+
 /* ---------------- Router ---------------- */
 function route(){
   stopSpeak();clearInterval(GT);
@@ -1150,8 +1292,9 @@ function route(){
   window.scrollTo(0,0);
 }
 window.addEventListener("hashchange",route);
-Object.keys(S.done).forEach(id=>addLessonCards(Number(id)));save();
+Object.keys(S.done).forEach(id=>addLessonCards(Number(id)));saveLocal();
 route();
+if(syncCfg()&&canSync())setTimeout(()=>sync("auto"),800);
 </script>
 <script src="audio-pack.js" async></script>
 
