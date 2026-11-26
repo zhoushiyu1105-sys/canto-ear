@@ -68,7 +68,7 @@ nav.tabs a[aria-current="page"]{color:var(--ink);border-bottom-color:var(--red)}
 .pill{display:inline-block;padding:2px 10px;border-radius:999px;font-size:.78rem;font-weight:500;background:var(--green-soft);color:var(--green)}
 .pill.red{background:var(--red-soft);color:var(--red)}
 .pill.amber{background:var(--amber-soft);color:var(--amber)}
-.btn{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:8px 14px;cursor:pointer;font-weight:500;display:inline-flex;align-items:center;gap:6px}
+.btn{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:8px 14px;cursor:pointer;font-weight:500;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
 .btn:hover{border-color:var(--green)}
 .btn.primary{background:var(--green);border-color:var(--green);color:var(--on-green)}
 .btn.small{padding:4px 10px;font-size:.85rem}
@@ -189,6 +189,31 @@ svg.curve .gl{stroke:var(--line);stroke-width:1}
 svg.curve .g90{stroke:var(--muted);stroke-dasharray:4 4}
 svg.curve text{fill:var(--muted);font-size:11px;font-family:var(--f-mono)}
 svg.curve .lab90{fill:var(--ink)}
+.ava{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--c);color:#fff;font-size:.72rem;font-weight:700;margin-right:6px;vertical-align:middle;flex:none}
+.ava.big{width:44px;height:44px;font-size:1.1rem;margin:0}
+.spk b{color:var(--ink);font-weight:600}
+.cast{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.castc{display:flex;gap:12px;align-items:flex-start;text-align:left;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--card);cursor:pointer}
+.castc:hover{border-color:var(--green)}
+.castc>span:last-child{display:grid;gap:2px;min-width:0}
+.castc .muted{font-size:.8rem}
+.castc em{font-style:normal;font-size:.85rem;color:var(--green)}
+.egg{border-color:var(--amber);background:linear-gradient(0deg,var(--card),var(--card)) padding-box}
+.egg .phrase{font-size:1.6rem;font-weight:700;font-family:var(--f-display)}
+.egg .note{background:var(--amber-soft);border-radius:8px;padding:10px 12px;font-size:.92rem}
+.badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px}
+.bdg{display:grid;justify-items:center;text-align:center;gap:4px;padding:10px 6px;border:1px dashed var(--line);border-radius:10px;opacity:.55}
+.bdg .medal{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-family:var(--f-display);font-weight:900;font-size:1.2rem;background:var(--line);color:var(--muted)}
+.bdg b{font-size:.88rem}.bdg span{font-size:.72rem;color:var(--muted)}
+.bdg.got{opacity:1;border-style:solid;border-color:var(--amber);background:var(--amber-soft)}
+.bdg.got .medal{background:var(--amber);color:#fff}
+.gamehud{display:flex;flex-wrap:wrap;gap:8px 18px;justify-content:space-between;font-variant-numeric:tabular-nums}
+.gamehud b{font-family:var(--f-display);font-size:1.3rem}
+.timer{height:8px;background:var(--line);border-radius:4px;overflow:hidden}
+.timer i{display:block;height:100%;background:var(--green);transition:width .1s linear}
+.timer.low i{background:var(--red)}
+.combo{color:var(--red);font-weight:700}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--paper);padding:10px 18px;border-radius:999px;font-weight:600;z-index:50;box-shadow:0 6px 20px rgba(0,0,0,.25);max-width:calc(100% - 32px);text-align:center}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 
@@ -210,11 +235,13 @@ svg.curve .lab90{fill:var(--ink)}
     <a href="#route">八星期路線</a>
     <a href="#test">聽力測驗</a>
     <a href="#review">複習<span id="due-badge" class="badge" hidden></span></a>
+    <a href="#game">遊戲</a>
   </nav>
 
   <div id="voice-warn" class="notice" hidden></div>
 
   <main id="view"></main>
+  <div id="toast" class="toast" role="status" hidden></div>
 </div>
 
 <script>
@@ -445,6 +472,46 @@ const TEST_JP = ["m4 goi1 maai4 daan1","ji4 gaa1 gei2 dim2 aa3","ngo5 dei6 ting1
 
 const TONES = [["詩","si1","1","高平","55"],["史","si2","2","高升","35"],["試","si3","3","中平","33"],["時","si4","4","低降","21"],["市","si5","5","低升","23"],["事","si6","6","低平","22"]];
 
+/* Cast: every speaker label in the dialogues maps to one character with a fixed voice.
+   voice/rate/pitch are passed to the neural TTS when the MP3s are generated (gen_audio.py). */
+const VOICE={maan:"zh-HK-HiuMaanNeural",gaai:"zh-HK-HiuGaaiNeural",lung:"zh-HK-WanLungNeural"};
+const CAST={
+  "你":    {name:"你",      role:"主角，啱啱嚟香港返工",     voice:"maan",rate:"+0%", pitch:"+0Hz", glyph:"你",color:"var(--green)", line:"我係新嚟嘅，請多多指教！"},
+  "Amy":   {name:"Amy",     role:"隔籬位同事，消息最靈通",   voice:"gaai",rate:"+6%", pitch:"+3Hz", glyph:"A", color:"#d9488b",     line:"早晨呀！今日有冇咩新聞呀？"},
+  "伙記":  {name:"華哥",    role:"茶餐廳伙記，落單快過閃電", voice:"lung",rate:"+15%",pitch:"+0Hz", glyph:"華",color:"#c4302a",     line:"快啲講啦，後面仲有人等緊㗎！"},
+  "老闆":  {name:"明叔",    role:"街市菜檔老闆，成日送蔥",   voice:"lung",rate:"-5%", pitch:"-6Hz", glyph:"明",color:"#7a8f2a",     line:"靚女，今日啲菜心好靚，買啲啦！"},
+  "同事":  {name:"阿 Ken",  role:"行政部同事，專門搞會議",   voice:"lung",rate:"+5%", pitch:"+4Hz", glyph:"K", color:"#2f6fb5",     line:"個 meeting 又改期喇！"},
+  "Kelly": {name:"Kelly",   role:"客戶經理，日日約客",       voice:"maan",rate:"+4%", pitch:"+6Hz", glyph:"凱",color:"#8a55c9",     line:"我今日約咗三個客，忙到飛起！"},
+  "阿詩":  {name:"阿詩",    role:"八卦之后，食花生專家",     voice:"gaai",rate:"+0%", pitch:"-2Hz", glyph:"詩",color:"#c27a12",     line:"喂，你知唔知呀……"},
+  "司機":  {name:"小巴司機",role:"開車好快，脾氣好直",       voice:"lung",rate:"+10%",pitch:"-8Hz", glyph:"巴",color:"#0b6b4d",     line:"有落就早啲講啦！"},
+  "路人甲":{name:"路人甲",  role:"問路嘅遊客",               voice:"gaai",rate:"+0%", pitch:"+0Hz", glyph:"甲",color:"#6b7a73",     line:""},
+  "路人乙":{name:"路人乙",  role:"熱心街坊",                 voice:"lung",rate:"+0%", pitch:"+2Hz", glyph:"乙",color:"#6b7a73",     line:""},
+  "May":   {name:"阿 May",  role:"同事，咩都識整",           voice:"gaai",rate:"-2%", pitch:"+6Hz", glyph:"M", color:"#d9488b",     line:"又壞？等我睇下先。"},
+  "醫生":  {name:"陳醫生",  role:"街坊醫生，講嘢慢條斯理",   voice:"lung",rate:"-8%", pitch:"-3Hz", glyph:"醫",color:"#2f6fb5",     line:"唔使驚，多啲飲水，早啲瞓。"},
+  "管理員":{name:"陳伯",    role:"大廈管理員，乜都知",       voice:"lung",rate:"-10%",pitch:"-10Hz",glyph:"伯",color:"#7a5a3a",     line:"有咩事搵我啦，我成日都喺度！"},
+  "阿希":  {name:"阿希",    role:"好朋友，飯局發起人",       voice:"gaai",rate:"+8%", pitch:"+2Hz", glyph:"希",color:"#c27a12",     line:"今晚得唔得閒？出嚟食飯啦！"}
+};
+const ALIAS={"乘客":"你"};
+const castOf=s=>CAST[ALIAS[s]||s]||CAST["你"];
+const CAST_LIST=["你","Amy","伙記","老闆","同事","Kelly","阿詩","司機","May","醫生","管理員","阿希"];
+/* Test audio: easy items read slowly by 你, harder ones by colleagues at speed */
+const TEST_VOICE=[["maan","-10%"],["maan","-10%"],["maan","-10%"],["maan","-10%"],["gaai","+0%"],["maan","+0%"],["lung","+0%"],["gaai","+0%"],
+  ["lung","+5%"],["gaai","+5%"],["lung","+5%"],["maan","+5%"],["gaai","+15%"],["lung","+15%"],["maan","+15%"]];
+
+/* 港式俗語彩蛋: one per lesson. [phrase, jyutping, meaning, fun note, example, example jyutping, example meaning] */
+const SLANG={
+1:["搵食","wan2 sik6","謀生、打工賺錢","字面係「搵嘢食」。返工辛苦？香港人會話：大家都係為咗搵兩餐咋。","大家都係出嚟搵食啫。","daai6 gaa1 dou1 hai6 ceot1 lei4 wan2 sik6 ze1","大家都是出來打工謀生而已。"],
+2:["飛沙走奶","fei1 saa1 zau2 naai5","（咖啡／奶茶）不要糖、不要奶","茶餐廳暗號：「沙」係砂糖，叫佢「飛」走；「奶」係淡奶，都叫佢「走」。伙記聽到就知你想飲齋啡。","唔該，熱咖啡飛沙走奶。","m4 goi1 jit6 gaa3 fe1 fei1 saa1 zau2 naai5","麻煩，熱咖啡不加糖不加奶。"],
+3:["抵食夾大件","dai2 sik6 gaap3 daai6 gin6","又便宜又大份","「抵」係划算，「夾」係兼且。香港人搵食最高評價，比「好味」仲要受落。","呢間茶記抵食夾大件！","ni1 gaan1 caa4 gei3 dai2 sik6 gaap3 daai6 gin6","這家茶餐廳又便宜又大份！"],
+4:["放飛機","fong3 fei1 gei1","放鴿子、爽約","內地人放鴿子，香港人放飛機，連爽約都放得大啲。被人放飛機就係「俾人放飛機」。","佢約咗我食飯，結果又放飛機。","keoi5 joek3 zo2 ngo5 sik6 faan6 git3 gwo2 jau6 fong3 fei1 gei1","他約了我吃飯，結果又放鴿子。"],
+5:["食花生","sik6 faa1 sang1","吃瓜、看熱鬧","內地食瓜，香港食花生，總之手上有零食先睇得開心。","佢哋嗌交，我哋喺度食花生。","keoi5 dei6 aai3 gaau1 ngo5 dei6 hai2 dou6 sik6 faa1 sang1","他們在吵架，我們在這裡吃瓜看熱鬧。"],
+6:["打的","daa2 dik1","坐計程車","「的」嚟自「的士」，即係 taxi。趕時間、落大雨，打的係香港人嘅最後救星。","趕時間，不如打的啦。","gon2 si4 gaan3 bat1 jyu4 daa2 dik1 laa1","趕時間，不如坐計程車吧。"],
+7:["蛇王","se4 wong4","偷懶、上班摸魚","蛇鍾意匿埋，返工匿埋唔做嘢就係「蛇」，蛇得出神入化就係「蛇王」。","佢又去咗蛇王，成個鐘都未返。","keoi5 jau6 heoi3 zo2 se4 wong4 seng4 go3 zung1 dou1 mei6 faan1","他又去摸魚了，一個小時都還沒回來。"],
+8:["周身唔聚財","zau1 san1 m4 zeoi6 coi4","渾身不舒服、不自在","全身上下都唔妥，好似啲錢都聚唔埋咁。病咗、瞓得唔好、著錯衫，都可以咁講。","啱啱病好，仲係周身唔聚財。","ngaam1 ngaam1 beng6 hou2 zung6 hai6 zau1 san1 m4 zeoi6 coi4","剛剛病好，還是渾身不舒服。"],
+9:["執手尾","zap1 sau2 mei5","收拾殘局、善後","「手尾」係人哋做到一半留低嘅尾巴，「執」就係幫佢收拾。返工最怕就係幫人執手尾。","樓上漏水，搞到我要執手尾。","lau4 soeng6 lau6 seoi2 gaau2 dou3 ngo5 jiu3 zap1 sau2 mei5","樓上漏水，害我要收拾殘局。"],
+10:["劈酒","pek3 zau2","拼酒、比賽喝酒","「劈」有對決嘅意思。生日飯、公司晚飯，總有人會舉杯話：「嚟，劈酒！」","生日飯梗係要劈酒啦！","saang1 jat6 faan6 gang2 hai6 jiu3 pek3 zau2 laa1","生日飯當然要拼酒啦！"]
+};
+
 /* Split text into syllable tokens (each Chinese character, each English word) and punctuation, then pair syllables with jyutping. */
 function tokenize(text){return text.match(/[A-Za-z][A-Za-z']*|[㐀-鿿豈-﫿]|\S/gu)||[]}
 const isSyl=t=>/^[A-Za-z]|^[㐀-鿿豈-﫿]$/u.test(t);
@@ -465,7 +532,7 @@ function rubyHTML(text,jp){
 /* ---------------- Storage ---------------- */
 const KEY="canto-ear-v1";
 function load(){try{return JSON.parse(localStorage.getItem(KEY))||{}}catch(e){return {}}}
-let S=Object.assign({done:{},checks:{},test:null,cards:{},newDay:null,revDays:{}},load());
+let S=Object.assign({done:{},checks:{},test:null,cards:{},newDay:null,revDays:{},slang:{},game:{best:0,bestCombo:0,plays:0},badges:{}},load());
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 const today=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
 function streak(){
@@ -479,6 +546,7 @@ function refreshStats(){
   document.getElementById("st-done").textContent=Object.keys(S.done).length;
   document.getElementById("st-streak").textContent=streak();
   document.getElementById("st-level").textContent=S.test?S.test.level:"—";
+  if(typeof checkBadges==="function")checkBadges();
   const bd=document.getElementById("due-badge");if(bd&&typeof dueCount==="function"){const n=dueCount();bd.textContent=n;bd.hidden=!n}
 }
 
@@ -490,7 +558,7 @@ function pickVoice(){
   const hk=voices.filter(v=>/^(zh[-_]HK|yue)/i.test(v.lang)||/cantonese|粵|廣東/i.test(v.name));
   hkVoice=hk.find(v=>/premium|enhanced|優化/i.test(v.name))||hk[0]||null;
   const w=document.getElementById("voice-warn");
-  if(!hkVoice&&voices.length){
+  if(!hkVoice&&voices.length&&ttsUsed){
     w.innerHTML='<b>未搵到粵語（香港）發音。</b> 而家會用其他中文聲音讀出，發音唔準。Mac：系統設定 → 輔助使用 → 朗讀內容 → 系統聲音 → 管理聲音，下載「中文（香港）」嘅聲音（例如 Sinji），然後重新開呢頁。iPhone：設定 → 輔助使用 → 朗讀內容 → 聲音 → 中文（香港）。';
     w.hidden=false;
   }else w.hidden=true;
@@ -506,7 +574,37 @@ function speak(text,opts={}){
     speechSynthesis.speak(u);
   });
 }
-function stopSpeak(){if("speechSynthesis" in window)speechSynthesis.cancel()}
+/* Recorded neural-voice clips (audio/<key>.mp3); falls back to the device voice if a clip is missing. */
+const AUDIO=typeof Audio!=="undefined"?new Audio():null;
+let ttsUsed=false;
+function stopSpeak(){if("speechSynthesis" in window)speechSynthesis.cancel();if(AUDIO){AUDIO.onended=AUDIO.onerror=null;try{AUDIO.pause()}catch(e){}}}
+/* The offline build ships every clip inside audio-pack.js (one file to upload); otherwise clips load from audio/. */
+const blobURLs={};
+function clipURL(key){
+  const P=window.AUDIO_PACK;
+  if(P&&P[key]){
+    if(!blobURLs[key]){const b=atob(P[key]);const u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);blobURLs[key]=URL.createObjectURL(new Blob([u],{type:"audio/mpeg"}))}
+    return blobURLs[key];
+  }
+  return "audio/"+key+".mp3";
+}
+function playClip(key,text,o={}){
+  return new Promise(res=>{
+    stopSpeak();
+    const viaTTS=()=>{ttsUsed=true;pickVoice();speak(text,o.tts||{}).then(res)};
+    if(!AUDIO||!key){viaTTS();return}
+    let settled=false;
+    const fin=()=>{if(settled)return;settled=true;AUDIO.onended=AUDIO.onerror=null;res()};
+    const fallback=()=>{if(settled)return;settled=true;AUDIO.onended=AUDIO.onerror=null;viaTTS()};
+    AUDIO.onended=fin;AUDIO.onerror=fallback;
+    const r=o.playRate||rate;
+    AUDIO.src=clipURL(key);
+    AUDIO.preservesPitch=true;AUDIO.webkitPreservesPitch=true;
+    AUDIO.defaultPlaybackRate=r;AUDIO.playbackRate=r;
+    const pr=AUDIO.play();
+    if(pr&&pr.catch)pr.catch(e=>{if(e&&e.name==="NotAllowedError")fin();else if(e&&e.name!=="AbortError")fallback()});
+  });
+}
 const PLAY='<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9-5.5z"/></svg>';
 const STOP='<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3.5" y="3.5" width="9" height="9"/></svg>';
 function rateSeg(){
@@ -518,14 +616,14 @@ function bindRate(root){
 let showJP=(()=>{try{return localStorage.getItem(KEY+"-jp")!=="0"}catch(e){return true}})();
 const CONTOUR={1:"M4 4 H40",2:"M4 14 L40 4",3:"M4 10 H40",4:"M4 15 L40 20",5:"M4 18 L40 13",6:"M4 15 H40"};
 function toneChart(){
-  return `<div class="tones">${TONES.map(t=>`<button class="tone ${t[2]<3?"t-hi":t[2]==3?"t-mid":"t-lo"}" data-tone-say="${t[0]}" aria-label="聽第 ${t[2]} 聲 ${t[0]}"><span class="c">${t[0]}</span><span class="j">${t[1]}</span><svg viewBox="0 0 44 22" aria-hidden="true"><path d="${CONTOUR[t[2]]}"/></svg><span class="d">${t[2]} 聲 · ${t[3]}</span></button>`).join("")}</div>
+  return `<div class="tones">${TONES.map((t,ti)=>`<button class="tone ${t[2]<3?"t-hi":t[2]==3?"t-mid":"t-lo"}" data-tone-say="${t[0]}" data-key="tone${ti}" aria-label="聽第 ${t[2]} 聲 ${t[0]}"><span class="c">${t[0]}</span><span class="j">${t[1]}</span><svg viewBox="0 0 44 22" aria-hidden="true"><path d="${CONTOUR[t[2]]}"/></svg><span class="d">${t[2]} 聲 · ${t[3]}</span></button>`).join("")}</div>
   <p class="muted" style="font-size:.85rem">同一個音 si，六個聲調就係六個字：詩、史、試、時、市、事。粵拼最尾嗰個數字就係聲調。普通話冇嘅「低」聲（4、5、6）係最易讀錯嘅，跟讀時特別留意。帶 p / t / k 收尾嘅字（例如 食 sik6、得 dak1、百 baak3）讀得短促，聲調仍然用 1、3、6 標。</p>
   <div class="row"><button class="btn small" id="tone-all">${PLAY}<span>連住聽六個</span></button></div>`;
 }
 function bindTones(root){
-  root.querySelectorAll("[data-tone-say]").forEach(b=>b.onclick=()=>{stopSpeak();speak(b.dataset.toneSay,{rate:.75})});
+  root.querySelectorAll("[data-tone-say]").forEach(b=>b.onclick=()=>{playClip(b.dataset.key,b.dataset.toneSay,{playRate:1,tts:{rate:.75}})});
   const all=root.querySelector("#tone-all");
-  if(all)all.onclick=async()=>{stopSpeak();for(const t of TONES){await speak(t[0],{rate:.75});await new Promise(r=>setTimeout(r,250))}};
+  if(all)all.onclick=async()=>{stopSpeak();for(const [ti,t] of TONES.entries()){await playClip("tone"+ti,t[0],{playRate:1,tts:{rate:.75}});await new Promise(r=>setTimeout(r,250))}};
 }
 function toneLegend(){return `<span class="legend"><span><i style="background:var(--red)"></i>高 1·2</span><span><i style="background:var(--amber)"></i>中 3</span><span><i style="background:var(--green)"></i>低 4·5·6</span></span>`}
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -595,6 +693,7 @@ function vToday(){
       <li><a href="https://words.hk" target="_blank" rel="noopener">粵典 words.hk</a>：查唔識嘅口語詞同粵拼。</li>
     </ul>
   </section>
+  <section class="card"><div class="row" style="justify-content:space-between"><span class="eyebrow">徽章</span><span class="muted">${Object.keys(S.badges).length} / ${BADGES.length}</span></div>${badgesHTML()}<div class="row"><a class="btn" href="#game">玩一局聽力搶答</a></div></section>
   </div>`;
   bindTones(view);
 }
@@ -608,7 +707,8 @@ function vRoute(){
     return `<div class="station ${allDone?"done":""} ${now?"now":""}"><div class="dot">${w.n}</div><div class="body">
       <h3>第 ${w.n} 週 · ${esc(w.name)}</h3><p class="muted">${esc(w.goal)}</p>
       ${ids.length?`<div class="lessons">${ids.map(i=>`<a class="lchip ${S.done[i]?"done":""}" href="#l${i}">Day ${i} · ${esc(LESSONS[i].title)}</a>`).join("")}</div>`:`<span class="pill amber" style="justify-self:start">完成上一週後同老師講「開第 ${w.n} 週」</span>`}
-    </div></div>`}).join("")}</div></section>`;
+    </div></div>`}).join("")}</div></section>${castCard()}`;
+  bindCast(view);
 }
 
 function vLesson(id){
@@ -637,7 +737,7 @@ function vLesson(id){
   <section class="card">
     <div class="row" style="justify-content:space-between"><span class="eyebrow">對話</span>${toneLegend()}</div>
     <div id="lines" class="blind hidezh ${showJP?"":"hidejp"}">
-    ${L.lines.map((l,i)=>`<div class="line" data-i="${i}"><button class="playbtn play" data-say="${i}" aria-label="播第 ${i+1} 句">${PLAY}</button><div class="spk">${esc(l[0])}</div><div class="yue has-jp">${rubyHTML(l[1],(JP[id]||[])[i])}</div><div class="zh">${esc(l[2])}</div></div>`).join("")}
+    ${L.lines.map((l,i)=>`<div class="line" data-i="${i}"><button class="playbtn play" data-say="${i}" aria-label="播第 ${i+1} 句">${PLAY}</button>${spkHTML(l[0])}<div class="yue has-jp">${rubyHTML(l[1],(JP[id]||[])[i])}</div><div class="zh">${esc(l[2])}</div></div>`).join("")}
     </div>
   </section>
 
@@ -648,8 +748,10 @@ function vLesson(id){
 
   <section class="card">
     <div class="eyebrow">重點詞（撳一下聽發音）</div>
-    <div class="vocab">${L.vocab.map(v=>`<button class="vcard" data-word="${esc(v[0])}"><span class="w">${esc(v[0])}</span><span class="j">${esc(v[1])}</span><span class="m">${esc(v[2])}</span></button>`).join("")}</div>
+    <div class="vocab">${L.vocab.map((v,vi)=>`<button class="vcard" data-word="${esc(v[0])}" data-key="v${id}-${vi}"><span class="w">${esc(v[0])}</span><span class="j">${esc(v[1])}</span><span class="m">${esc(v[2])}</span></button>`).join("")}</div>
   </section>
+
+  ${eggHTML(id)}
 
   <section class="card">
     <div class="eyebrow">六個聲調（撳嚟聽）</div>
@@ -675,13 +777,13 @@ function vLesson(id){
   zhBtn.onclick=()=>{const h=linesEl.classList.toggle("hidezh");zhBtn.setAttribute("aria-pressed",!h);zhBtn.textContent=h?"顯示普通話":"隱藏普通話"};
   const speakers=[...new Set(L.lines.map(l=>l[0]))];
   const pitchOf=s=>speakers.indexOf(s)%2?1.18:0.95;
-  view.querySelectorAll("[data-say]").forEach(b=>b.onclick=()=>{stopSpeak();const l=L.lines[b.dataset.say];hl(b.dataset.say);speak(l[1],{pitch:pitchOf(l[0])}).then(()=>hl(-1))});
+  view.querySelectorAll("[data-say]").forEach(b=>b.onclick=()=>{stopSpeak();const l=L.lines[b.dataset.say];hl(b.dataset.say);playClip(`l${id}-${b.dataset.say}`,l[1],{tts:{pitch:pitchOf(l[0])}}).then(()=>hl(-1))});
   function hl(i){linesEl.querySelectorAll(".line").forEach(x=>x.classList.toggle("speaking",x.dataset.i==i))}
   let playing=false;const pa=document.getElementById("playall");
   pa.onclick=async()=>{
     if(playing){playing=false;stopSpeak();hl(-1);pa.innerHTML=PLAY+"<span>播全段</span>";return}
     playing=true;pa.innerHTML=STOP+"<span>停止</span>";stopSpeak();
-    for(let i=0;i<L.lines.length&&playing;i++){hl(i);await speak(L.lines[i][1],{pitch:pitchOf(L.lines[i][0])});await new Promise(r=>setTimeout(r,350))}
+    for(let i=0;i<L.lines.length&&playing;i++){hl(i);await playClip(`l${id}-${i}`,L.lines[i][1],{tts:{pitch:pitchOf(L.lines[i][0])}});await new Promise(r=>setTimeout(r,350))}
     playing=false;hl(-1);pa.innerHTML=PLAY+"<span>播全段</span>";
   };
   view.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{
@@ -689,7 +791,8 @@ function vLesson(id){
     view.querySelectorAll(`.opt[data-q="${b.dataset.q}"]`).forEach(x=>{x.classList.remove("right","wrong");if(Number(x.dataset.o)===q[2]&&right)x.classList.add("right")});
     b.classList.add(right?"right":"wrong");
   });
-  view.querySelectorAll(".vcard").forEach(b=>b.onclick=()=>{stopSpeak();speak(b.dataset.word)});
+  view.querySelectorAll(".vcard").forEach(b=>b.onclick=()=>playClip(b.dataset.key,b.dataset.word,{playRate:Math.min(rate,1)}));
+  bindEgg(view,id);
   view.querySelectorAll("[data-ck]").forEach(c=>c.onchange=()=>{S.checks[id]=S.checks[id]||{};S.checks[id][c.dataset.ck]=c.checked;save()});
   document.getElementById("finish").onclick=()=>{S.done[id]=today();addLessonCards(id);save();refreshStats();const f=document.getElementById("finish");f.textContent="已完成 ✓";};
 }
@@ -717,7 +820,7 @@ function vTest(){
     <div class="row"><button class="btn small" id="tquit">放棄測驗</button></div>
   </section>`;
   const tp=document.getElementById("tplay");
-  tp.onclick=()=>{if(T.plays>=3)return;T.plays++;document.getElementById("pc").textContent=T.plays;if(T.plays>=3)tp.disabled=true;stopSpeak();speak(q.yue,{rate:q.rate})};
+  tp.onclick=()=>{if(T.plays>=3)return;T.plays++;document.getElementById("pc").textContent=T.plays;if(T.plays>=3)tp.disabled=true;playClip("t"+T.i,q.yue,{playRate:1,tts:{rate:q.rate}})};
   if(T.plays>=3)tp.disabled=true;
   view.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{
     if(T.plays===0){tp.focus();tp.animate?.([{transform:"scale(1)"},{transform:"scale(1.08)"},{transform:"scale(1)"}],{duration:300});return}
@@ -736,7 +839,7 @@ function testResult(){
   else{level="L4 進階";advice="第 1 週快速過一次當重溫，直接用 1.15× 盲聽。同老師講「跳去第 4 週」，我會出會議同新聞程度嘅材料。"}
   const weak=Object.entries(by).filter(([k,v])=>v.ok/v.n<0.75).map(([k])=>LV_NAME[k]);
   S.test={score,level,date:today(),by};T.ans.forEach((a,i)=>{if(!a.ok)addCard(`t0-${i}`)});save();refreshStats();
-  const wrong=T.ans.map((a,i)=>({a,q:TEST[i],jp:TEST_JP[i]})).filter(x=>!x.a.ok);
+  const wrong=T.ans.map((a,i)=>({a,i,q:TEST[i],jp:TEST_JP[i]})).filter(x=>!x.a.ok);
   view.innerHTML=`<section class="card">
     <div class="eyebrow">測驗結果</div>
     <div class="result-level">${level}</div>
@@ -744,11 +847,11 @@ function testResult(){
     ${weak.length?`<p>要加強：${weak.map(w=>`<span class="pill red">${esc(w)}</span>`).join(" ")}</p>`:""}
     <div class="tablewrap"><table class="simple"><thead><tr><th>部分</th><th>答啱</th></tr></thead><tbody>
     ${Object.entries(by).map(([k,v])=>`<tr><td>${LV_NAME[k]}</td><td>${v.ok} / ${v.n}</td></tr>`).join("")}</tbody></table></div>
-    ${wrong.length?`<div class="eyebrow">答錯嘅題（撳嚟再聽）</div><div>${wrong.map(x=>`<div class="line"><button class="playbtn" data-yue="${esc(x.q.yue)}" aria-label="再聽">${PLAY}</button><div class="yue has-jp">${rubyHTML(x.q.yue,x.jp)}</div><div class="zh">${esc(x.q.opts[x.q.a])}</div></div>`).join("")}</div>`:""}
+    ${wrong.length?`<div class="eyebrow">答錯嘅題（撳嚟再聽）</div><div>${wrong.map(x=>`<div class="line"><button class="playbtn" data-yue="${esc(x.q.yue)}" data-key="t${x.i}" aria-label="再聽">${PLAY}</button><div class="yue has-jp">${rubyHTML(x.q.yue,x.jp)}</div><div class="zh">${esc(x.q.opts[x.q.a])}</div></div>`).join("")}</div>`:""}
     <div class="row"><a class="btn primary" href="#today">返去今日課堂</a><button class="btn" id="retest">再測一次</button></div>
     <p class="muted" style="font-size:.85rem">想我再細啲分析？將呢個分數同答錯嘅題目話俾老師聽（直接喺對話入面講就得）。</p>
   </section>`;
-  view.querySelectorAll("[data-yue]").forEach(b=>b.onclick=()=>{stopSpeak();speak(b.dataset.yue)});
+  view.querySelectorAll("[data-yue]").forEach(b=>b.onclick=()=>playClip(b.dataset.key,b.dataset.yue));
   document.getElementById("retest").onclick=()=>{T={i:0,ans:[],plays:0};vTest()};
 }
 
@@ -790,9 +893,9 @@ const fmtDays=n=>n===0?"今日再嚟":n<30?`${n} 日`:n<365?`${Math.round(n/30)}
 function cardContent(id){
   const m=id.match(/^([vst])(\d+)-(\d+)$/); if(!m)return null;
   const [,k,a,b]=m; const L=LESSONS[a];
-  if(k==="v"&&L&&L.vocab[b]){const v=L.vocab[b];return {yue:v[0],jp:v[1],zh:v[2],src:`Day ${a} 詞語`}}
-  if(k==="s"&&L&&L.lines[b]){const l=L.lines[b];return {yue:l[1],jp:(JP[a]||[])[b],zh:l[2],src:`Day ${a} 對話`}}
-  if(k==="t"&&TEST[b]){const q=TEST[b];return {yue:q.yue,jp:TEST_JP[b],zh:q.opts[q.a],src:"測驗錯題"}}
+  if(k==="v"&&L&&L.vocab[b]){const v=L.vocab[b];return {key:`v${a}-${b}`,yue:v[0],jp:v[1],zh:v[2],src:`Day ${a} 詞語`}}
+  if(k==="s"&&L&&L.lines[b]){const l=L.lines[b];return {key:`l${a}-${b}`,yue:l[1],jp:(JP[a]||[])[b],zh:l[2],src:`Day ${a} 對話`}}
+  if(k==="t"&&TEST[b]){const q=TEST[b];return {key:`t${b}`,yue:q.yue,jp:TEST_JP[b],zh:q.opts[q.a],src:"測驗錯題"}}
   return null;
 }
 function addCard(id){if(!S.cards[id]&&cardContent(id))S.cards[id]={state:"new",added:today()}}
@@ -843,7 +946,7 @@ function vReview(){
   </section>
   <p class="muted" style="font-size:.85rem;text-align:center">快捷鍵：空白鍵 播放／揭答案 · 1 2 3 4 評分</p></div>`;
   bindRate(view);
-  const play=()=>{stopSpeak();speak(cc.yue)};
+  const play=()=>playClip(cc.key,cc.yue);
   document.getElementById("rplay").onclick=play;
   if(!R.startedPlay){R.startedPlay=true;play()}
   const sh=document.getElementById("rshow");if(sh)sh.onclick=()=>{R.shown=true;vReview()};
@@ -892,15 +995,155 @@ function curveCard(){
   </section>`;
 }
 
+/* ---------------- Cast, slang eggs, badges, game ---------------- */
+function spkHTML(label){
+  const c=castOf(label);
+  return `<div class="spk"><span class="ava" style="--c:${c.color}">${esc(c.glyph)}</span><b>${esc(c.name)}</b>${c.name==="你"?"":" · "+esc(c.role)}</div>`;
+}
+function castCard(){
+  return `<section class="card"><div class="eyebrow">角色表</div><h3>課堂入面會遇到嘅人</h3>
+  <p class="muted">每個角色都有固定聲音同性格。撳一下，聽佢哋嘅口頭禪。</p>
+  <div class="cast">${CAST_LIST.map((k,i)=>{const c=CAST[k];return `<button class="castc" data-key="c${i}" data-text="${esc(c.line)}"><span class="ava big" style="--c:${c.color}">${esc(c.glyph)}</span><span><b>${esc(c.name)}</b><span class="muted">${esc(c.role)}</span><em>「${esc(c.line)}」</em></span></button>`}).join("")}</div></section>`;
+}
+function bindCast(root){root.querySelectorAll(".castc").forEach(b=>b.onclick=()=>playClip(b.dataset.key,b.dataset.text,{playRate:1}))}
+
+function eggHTML(id){
+  const x=SLANG[id]; if(!x)return "";
+  const open=!!S.slang[id];
+  return `<section class="card egg">
+    <div class="row" style="justify-content:space-between"><span class="eyebrow">港式俗語彩蛋</span>${open?'<span class="pill amber">已收藏</span>':""}</div>
+    <div id="egg-closed" ${open?"hidden":""}><p style="margin-bottom:10px">今日嘅彩蛋係一句香港人成日講、但課本唔會教嘅俗語。</p><button class="btn primary" id="egg-open">撳開彩蛋</button></div>
+    <div id="egg-body" style="display:grid;gap:10px" ${open?"":"hidden"}>
+      <div class="row"><button class="playbtn" data-egg="s${id}" data-text="${esc(x[0])}" aria-label="聽俗語">${PLAY}</button><span class="phrase yue has-jp">${rubyHTML(x[0],x[1])}</span></div>
+      <p><b>意思：</b>${esc(x[2])}</p>
+      <div class="note">${esc(x[3])}</div>
+      <div class="line" style="border:0;padding:0"><button class="playbtn play" data-egg="sx${id}" data-text="${esc(x[4])}" aria-label="聽例句">${PLAY}</button><div class="yue has-jp">${rubyHTML(x[4],x[5])}</div><div class="zh">${esc(x[6])}</div></div>
+    </div>
+  </section>`;
+}
+function bindEgg(root,id){
+  const ob=root.querySelector("#egg-open");
+  if(ob)ob.onclick=()=>{S.slang[id]=today();save();root.querySelector("#egg-closed").hidden=true;root.querySelector("#egg-body").hidden=false;playClip("s"+id,SLANG[id][0],{playRate:1});refreshStats()};
+  root.querySelectorAll("[data-egg]").forEach(b=>b.onclick=()=>playClip(b.dataset.egg,b.dataset.text));
+}
+
+const revTotal=()=>Object.values(S.revDays||{}).reduce((a,b)=>a+b,0);
+const BADGES=[
+  {id:"first",  g:"初",name:"初出茅廬",  desc:"完成第 1 課",            test:()=>Object.keys(S.done).length>=1},
+  {id:"week1",  g:"週",name:"一週畢業",  desc:"完成第 1 週 5 課",        test:()=>[1,2,3,4,5].every(i=>S.done[i])},
+  {id:"all10",  g:"達",name:"兩週達人",  desc:"完成頭兩週 10 課",        test:()=>Object.keys(S.done).length>=10},
+  {id:"streak7",g:"茶",name:"茶記熟客",  desc:"連續 7 日打卡",           test:()=>streak()>=7},
+  {id:"rev100", g:"溫",name:"複習狂人",  desc:"累計複習 100 張卡",       test:()=>revTotal()>=100},
+  {id:"combo10",g:"耳",name:"耳仔好醒",  desc:"遊戲連續答啱 10 題",      test:()=>(S.game.bestCombo||0)>=10},
+  {id:"score",  g:"快",name:"快槍手",    desc:"一局遊戲得 2000 分",      test:()=>(S.game.best||0)>=2000},
+  {id:"test15", g:"滿",name:"滿分耳朵",  desc:"聽力測驗 15 題全啱",      test:()=>!!S.test&&S.test.score===15},
+  {id:"slang10",g:"俗",name:"俗語收藏家",desc:"揭開 10 個俗語彩蛋",      test:()=>Object.keys(S.slang||{}).length>=10}
+];
+function badgesHTML(){
+  return `<div class="badges">${BADGES.map(b=>{const got=S.badges[b.id];return `<div class="bdg ${got?"got":""}" title="${got?"解鎖於 "+got:"未解鎖"}"><span class="medal">${b.g}</span><b>${b.name}</b><span>${b.desc}</span></div>`}).join("")}</div>`;
+}
+let toastT=null;
+function toast(msg){const t=document.getElementById("toast");if(!t)return;t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,3200)}
+function checkBadges(){
+  const fresh=BADGES.filter(b=>!S.badges[b.id]&&b.test());
+  if(!fresh.length)return;
+  fresh.forEach(b=>S.badges[b.id]=today());save();
+  toast("解鎖徽章：「"+fresh.map(b=>b.name).join("」「")+"」");
+}
+
+/* 極速聽力搶答: 10 questions, 12 s each, points for speed and combos */
+let G=null,GT=null;
+const GQ=10,GSEC=12;
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+function gamePool(){
+  const ids=Object.keys(S.done).map(Number);const use=ids.length?ids:[1,2,3];
+  const p=[];use.forEach(id=>{const L=LESSONS[id];if(!L)return;
+    L.lines.forEach((l,i)=>p.push({key:`l${id}-${i}`,yue:l[1],jp:(JP[id]||[])[i],zh:l[2],t:"s"}));
+    L.vocab.forEach((v,i)=>p.push({key:`v${id}-${i}`,yue:v[0],jp:v[1],zh:v[2],t:"v"}))});
+  return p;
+}
+function newGame(){
+  const pool=gamePool();
+  const qs=shuffle(pool.slice()).slice(0,GQ).map(it=>{
+    let others=shuffle(pool.filter(o=>o.zh!==it.zh&&o.t===it.t)).slice(0,3);
+    if(others.length<3)others=others.concat(shuffle(pool.filter(o=>o.zh!==it.zh&&!others.includes(o))).slice(0,3-others.length));
+    return {it,opts:shuffle([it,...others])};
+  });
+  G={qs,i:0,score:0,combo:0,maxCombo:0,right:0,picked:null,left:GSEC,over:false,missed:[]};
+}
+function vGame(){
+  clearInterval(GT);
+  if(!G){
+    view.innerHTML=`<div style="display:grid;gap:20px"><section class="card">
+      <div class="eyebrow">聽力小遊戲</div><h2>極速聽力搶答</h2>
+      <p>一局 ${GQ} 題，每題 ${GSEC} 秒。聽一句粵語，揀啱普通話意思。答得快有時間獎分，連續答啱有連擊加分。</p>
+      <p class="muted">題目嚟自你完成咗嘅課${Object.keys(S.done).length?"":"（未完成任何課，先用 Day 1–3）"}。</p>
+      <div class="gamehud"><span>最高分 <b>${S.game.best||0}</b></span><span>最長連擊 <b>${S.game.bestCombo||0}</b></span><span>玩咗 <b>${S.game.plays||0}</b> 局</span></div>
+      <div class="row"><button class="btn primary" id="gstart">${PLAY}<span>開始遊戲</span></button></div>
+    </section>
+    <section class="card"><div class="row" style="justify-content:space-between"><span class="eyebrow">徽章</span><span class="muted">${Object.keys(S.badges).length} / ${BADGES.length}</span></div>${badgesHTML()}</section></div>`;
+    document.getElementById("gstart").onclick=()=>{newGame();vGame()};
+    return;
+  }
+  if(G.over)return gameResult();
+  const q=G.qs[G.i];
+  const pk=G.picked;
+  view.innerHTML=`<section class="card">
+    <div class="gamehud"><span>第 <b>${G.i+1}</b> / ${GQ} 題</span><span>分數 <b id="gscore">${G.score}</b></span><span class="combo">${G.combo>1?"連擊 ×"+G.combo:""}</span></div>
+    <div class="timer" id="gtimer"><i style="width:${G.left/GSEC*100}%"></i></div>
+    <button class="bigplay" id="gplay" aria-label="再聽一次">${PLAY}</button>
+    <div class="opts">${q.opts.map((o,oi)=>{let cls="";if(pk){if(o===q.it)cls="right";else if(oi===pk.oi)cls="wrong"}return `<button class="opt ${cls}" data-o="${oi}" ${pk?"disabled":""}>${esc(o.zh)}</button>`}).join("")}</div>
+    ${pk?`<div style="display:grid;gap:6px;text-align:center">
+        <p><b style="color:${pk.correct?"var(--green)":"var(--red)"}">${pk.correct?`答啱！+${pk.pts}`:pk.oi<0?"夠鐘喇！":"差少少！"}</b></p>
+        <div class="dict-ans yue has-jp">${rubyHTML(q.it.yue,q.it.jp)}</div>
+      </div>
+      <div class="row" style="justify-content:center"><button class="btn primary" id="gnext">${G.i+1<GQ?"下一題 →":"睇結果"}</button></div>`:""}
+  </section>`;
+  const play=()=>playClip(q.it.key,q.it.yue);
+  document.getElementById("gplay").onclick=play;
+  if(!pk){
+    play();
+    view.querySelectorAll(".opt").forEach(b=>b.onclick=()=>gAnswer(Number(b.dataset.o)));
+    const bar=document.querySelector("#gtimer");
+    GT=setInterval(()=>{G.left=Math.max(0,G.left-0.1);bar.firstElementChild.style.width=(G.left/GSEC*100)+"%";bar.classList.toggle("low",G.left<4);if(G.left<=0)gAnswer(-1)},100);
+  }else{
+    document.getElementById("gnext").onclick=()=>{G.i++;G.picked=null;G.left=GSEC;if(G.i>=GQ)G.over=true;vGame()};
+  }
+}
+function gAnswer(oi){
+  clearInterval(GT);
+  const q=G.qs[G.i];const correct=oi>=0&&q.opts[oi]===q.it;let pts=0;
+  if(correct){G.combo++;pts=100+Math.round(G.left)*10+(G.combo-1)*20;G.score+=pts;G.right++;G.maxCombo=Math.max(G.maxCombo,G.combo)}
+  else{G.combo=0;G.missed.push(q.it)}
+  G.picked={oi,correct,pts};
+  vGame();
+}
+function gameResult(){
+  const rec=G.score>(S.game.best||0);
+  S.game.best=Math.max(S.game.best||0,G.score);S.game.bestCombo=Math.max(S.game.bestCombo||0,G.maxCombo);S.game.plays=(S.game.plays||0)+1;save();refreshStats();
+  const verdict=G.right>=9?"耳仔好醒！":G.right>=6?"幾好喎，繼續努力！":"唔緊要，多聽幾次就得！";
+  view.innerHTML=`<section class="card">
+    <div class="eyebrow">遊戲結果</div>
+    <div class="result-level">${G.score} 分</div>
+    <p>${verdict} 答啱 <b>${G.right} / ${GQ}</b> · 最長連擊 <b>${G.maxCombo}</b> ${rec?'<span class="pill amber">新紀錄！</span>':""}</p>
+    ${G.missed.length?`<div class="eyebrow">答錯嘅（撳嚟再聽）</div><div>${G.missed.map(it=>`<div class="line"><button class="playbtn" data-key="${it.key}" data-text="${esc(it.yue)}" aria-label="再聽">${PLAY}</button><div class="yue has-jp">${rubyHTML(it.yue,it.jp)}</div><div class="zh">${esc(it.zh)}</div></div>`).join("")}</div>`:""}
+    <div class="row"><button class="btn primary" id="gagain">再玩一局</button><a class="btn" href="#today">返去今日</a></div>
+  </section>`;
+  view.querySelectorAll("[data-key]").forEach(b=>b.onclick=()=>playClip(b.dataset.key,b.dataset.text));
+  document.getElementById("gagain").onclick=()=>{newGame();vGame()};
+  G.over="shown";
+}
+
 /* ---------------- Router ---------------- */
 function route(){
-  stopSpeak();
+  stopSpeak();clearInterval(GT);
   const h=(location.hash||"#today").slice(1);
   let tab=h;
   if(/^l\d+$/.test(h)){tab="route";vLesson(Number(h.slice(1)))}
   else if(h==="route")vRoute();
   else if(h==="test")vTest();
   else if(h==="review")vReview();
+  else if(h==="game")vGame();
   else{tab="today";vToday()}
   document.querySelectorAll("nav.tabs a").forEach(a=>{if(a.getAttribute("href")==="#"+tab)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current")});
   refreshStats();
@@ -910,6 +1153,7 @@ window.addEventListener("hashchange",route);
 Object.keys(S.done).forEach(id=>addLessonCards(Number(id)));save();
 route();
 </script>
+<script src="audio-pack.js" async></script>
 
 <script>
 if ("serviceWorker" in navigator) {
